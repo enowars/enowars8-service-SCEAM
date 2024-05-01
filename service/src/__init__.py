@@ -26,9 +26,11 @@ def create_app():
 
     from .views import views
     from .auth import auth
+    from .user_profile import user_profile
 
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
+    app.register_blueprint(user_profile, url_prefix='/')
 
     from .models import User, ENOFT
     

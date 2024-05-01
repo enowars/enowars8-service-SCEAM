@@ -1,4 +1,4 @@
-import email.utils
+from email.utils import parseaddr
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from .models import User
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -78,8 +78,8 @@ def sign_up():
         if user:
             flash('Email already exists.', category='error')
             logger.error(f"Invalid")
-        elif len(email) < 4:
-            flash('Email must be greater than 3 characters.', category='error')
+        elif parseaddr(email)[1] == '':
+            flash('Email is invalid', category='error')
         elif len(name) < 2:
             flash('Name must be greater than 1 character.', category='error')
         else:
@@ -90,7 +90,7 @@ def sign_up():
             session['private_key'] = private_key
             set_session_name(new_user)
             flash('Account created!', category='success')
-            logger.info(f"Registration: {email} {name} {public_key} {private_key}")
+            logger.info(f"Registration Success: {email}")
             return redirect(url_for('auth.keyShowcase'))
 
     return render_template("sign_up.html", user=current_user)
