@@ -12,7 +12,6 @@ class User(db.Model, UserMixin):
     
 class ENOFT(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    image_full = db.Column(db.String(10000))
-    image_lossy = db.Column(db.String(10000))
+    image_path = db.Column(db.String(10000))
     certificate = db.Column(db.String(10000))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))

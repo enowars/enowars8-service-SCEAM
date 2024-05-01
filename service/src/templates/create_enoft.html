@@ -1,8 +1,13 @@
 {% extends "base.html" %} {% block title %}Create ENOFT{% endblock %} {% block
 content %}
 
-<form align="center" action="/create_enoft" method="POST">
-  <input type="submit" />
+<form
+  align="center"
+  action="/create_enoft"
+  method="POST"
+  enctype="multipart/form-data"
+>
+  <input type="file" name="file" />
   <input type="submit" class="btn btn-primary" />
 </form>
 {% endblock %}
