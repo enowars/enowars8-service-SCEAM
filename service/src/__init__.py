@@ -5,6 +5,7 @@ from flask_login import LoginManager
 import logging
 import os
 from cryptography.hazmat.primitives.asymmetric import rsa
+from pathlib import Path
 
 logger = logging.getLogger("TODO: Set logger name here")
 logger.setLevel(logging.DEBUG)
@@ -41,6 +42,9 @@ def create_app():
         public_exponent=65537, key_size=4096)
     print("App root Path: ", app.root_path)
     db.init_app(app)
+    
+    Path(app.config['FULL_IMAGE_UPLOADS']).mkdir(parents=True, exist_ok=True)
+    Path(app.config['LOSSY_IMAGE_UPLOADS']).mkdir(parents=True, exist_ok=True)
 
     from .views import views
     from .auth import auth
