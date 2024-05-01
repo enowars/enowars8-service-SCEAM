@@ -9,7 +9,8 @@ class User(db.Model, UserMixin):
     public_key = db.Column(db.String(150))
     name = db.Column(db.String(150))
     enofts = db.relationship('ENOFT')
-    
+
+
 class ENOFT(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     image_path = db.Column(db.String(10000))

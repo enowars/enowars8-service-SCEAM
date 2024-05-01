@@ -20,19 +20,15 @@ INSTANCE_FOLDER = os.path.join(SERVICE_FOLDER, 'instance')
 UPLOAD_FOLDER = os.path.join(INSTANCE_FOLDER, 'uploads')
 
 
-
 db = SQLAlchemy()
 DB_NAME = "database.db"
 SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_NAME}"
 SECRET_KEY = 'hjshjhdjah kjshkjdhjs'
-UPLOAD_FOLDER = '/uploads'
-
-
 
 
 def create_app():
     app = Flask(__name__)
-    
+
     app.config['SECRET_KEY'] = SECRET_KEY
     app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -41,7 +37,8 @@ def create_app():
     app.config['LOSSY_IMAGE_UPLOADS'] = os.path.join(UPLOAD_FOLDER, 'lossy')
     app.config['ALLOWED_EXTENSIONS'] = {'PNG'}
     app.config['NAME'] = 'master'
-    app.config['RSA_KEY'] = rsa.generate_private_key(public_exponent=65537, key_size=4096)
+    app.config['RSA_KEY'] = rsa.generate_private_key(
+        public_exponent=65537, key_size=4096)
     print("App root Path: ", app.root_path)
     db.init_app(app)
 
@@ -54,7 +51,7 @@ def create_app():
     app.register_blueprint(user_profile, url_prefix='/')
 
     from .models import User, ENOFT
-    
+
     with app.app_context():
         db.create_all()
 

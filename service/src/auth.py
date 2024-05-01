@@ -2,15 +2,13 @@ from email.utils import parseaddr
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from .models import User
 from werkzeug.security import generate_password_hash, check_password_hash
-from . import db, logger   ##means from __init__.py import db
+from . import db, logger  # means from __init__.py import db
 from flask_login import login_user, login_required, logout_user, current_user
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 import email
-
-
 
 
 auth = Blueprint('auth', __name__)
@@ -21,7 +19,7 @@ def login():
     # handle first page request
     if request.method == 'GET':
         return render_template("login.html", user=current_user)
-    
+
     # handle form submission
     email = request.form.get('email')
     private_key = request.form.get('private_key')
@@ -30,33 +28,34 @@ def login():
     user = User.query.filter_by(email=email).first()
     if user == None:
         return login_error_handler(f"User with email {email} does not exist.")
-        
+
     if user.name != name:
         return login_error_handler(f"User {user.name} with email {email} does not have name {name}.")
 
     if not valid_keys(private_key, user):
         return login_error_handler(f"Private key does not match public key for user with email {email}.")
-    
-    
+
     login_user(user, remember=True)
     set_session_name(user)
     flash('Logged in successfully!', category='success')
     return redirect(url_for('views.home'))
-    
-            
+
 
 def valid_keys(private_key, user):
     example_message = b"example message to be encrypted"
-    encrypted = user.public_key.encrypt(example_message, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
-    decrypted = private_key.decrypt(encrypted, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
+    encrypted = user.public_key.encrypt(example_message, padding.OAEP(
+        mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
+    decrypted = private_key.decrypt(encrypted, padding.OAEP(mgf=padding.MGF1(
+        algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
     return decrypted == example_message
-        
+
 
 def login_error_handler(msg):
     errorString = "Credentials do not match."
     logger.info("LOGIN: "+msg)
     flash(errorString, category='error')
     return render_template("login.html", user=current_user)
+
 
 @auth.route('/logout')
 @login_required
@@ -71,10 +70,11 @@ def sign_up():
         email = request.form.get('email')
         name = request.form.get('name')
         public_key, private_key = generate_keys()
-        logger.info(f"Attempted Registration: {email} {name} {public_key} {private_key}")
+        logger.info(
+            f"Attempted Registration: {email} {name} {public_key} {private_key}")
 
         user = User.query.filter_by(email=email).first()
-        
+
         if user:
             flash('Email already exists.', category='error')
             logger.error(f"Invalid")
@@ -95,19 +95,21 @@ def sign_up():
 
     return render_template("sign_up.html", user=current_user)
 
+
 def generate_keys():
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     public_key = key.public_key().public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        ).decode('utf-8')
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    ).decode('utf-8')
     private_key = key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption()
-        ).decode('utf-8')
-    
-    return public_key,private_key
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption()
+    ).decode('utf-8')
+
+    return public_key, private_key
+
 
 def set_session_name(user):
     encoded = f"{user.name} <{user.email}>"
