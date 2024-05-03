@@ -1,13 +1,25 @@
 {% extends "base.html" %} {% block title %}Profile{% endblock %} {% block
 content %}
 
-<form
-  align="center"
-  action="/profile"
-  method="POST"
-  enctype="multipart/form-data"
->
-  <input type="file" name="file" />
-  <input type="submit" class="btn btn-primary" />
-</form>
+<h1 align="center">Profile of {{name}}</h1>
+
+{% if user.is_authenticated %} {% if owned == true %}
+<div class="form">
+  <form
+    align="center"
+    action="/profile_{{ user.email }}"
+    method="POST"
+    enctype="multipart/form-data"
+  >
+    <input type="file" name="file" />
+    <input type="submit" class="btn btn-primary" />
+  </form>
+</div>
+{% endif %} {% endif %}
+
+<div>
+  {% for path in images %}
+  <img src="{{ url_for('user_profile.uploads', path=path) }}" alt="image" />
+  {% endfor %}
+</div>
 {% endblock %}

@@ -16,9 +16,8 @@ fh.setFormatter(formatter)
 logger.addHandler(fh)
 
 SRC_FOLDER = os.path.dirname(os.path.abspath(__file__))
-SERVICE_FOLDER = os.path.dirname(SRC_FOLDER)
-INSTANCE_FOLDER = os.path.join(SERVICE_FOLDER, 'instance')
-UPLOAD_FOLDER = os.path.join(INSTANCE_FOLDER, 'uploads')
+UPLOAD_FOLDER = os.path.join(SRC_FOLDER, 'uploads')
+
 
 
 db = SQLAlchemy()

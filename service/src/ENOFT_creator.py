@@ -82,6 +82,7 @@ class ENOFT_creator:
             current_app.config["LOSSY_IMAGE_UPLOADS"], file_name)
         certificate = build_cert(self.img)
 
+        print("Full save path: ", full_save_path)
         self.img.save(full_save_path)
         # TODO: generate lossy image
         self.img.save(lossy_save_path)
