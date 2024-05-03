@@ -19,7 +19,6 @@ SRC_FOLDER = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(SRC_FOLDER, 'uploads')
 
 
-
 db = SQLAlchemy()
 DB_NAME = "database.db"
 SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_NAME}"
