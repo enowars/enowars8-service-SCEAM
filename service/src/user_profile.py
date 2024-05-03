@@ -32,8 +32,9 @@ def profile(email):
 @user_profile.route('/uploads/<path:path>', methods=['GET', 'POST'])
 @login_required
 def uploads(path):
-    owner = ENOFT.query.filter_by(image_path=path).first().user_id
-    owned = True if owner == current_user.id else False
+    owner_email = ENOFT.query.filter_by(image_path=path).first().email
+    session_email = parseaddr(session['name'])[1]
+    owned = True if session_email == owner_email else False
     if not owned:
         return send_from_directory(current_app.config['LOSSY_IMAGE_UPLOADS'], path)
     else:
