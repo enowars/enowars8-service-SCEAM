@@ -1,5 +1,5 @@
 from email.utils import parseaddr
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, send_file, Response
 from .models import User
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db, logger  # means from __init__.py import db
@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
-import email
+from io import BytesIO
 
 
 auth = Blueprint('auth', __name__)
@@ -118,9 +118,21 @@ def set_session_name(user):
 
 @auth.route('/key', methods=['GET', 'POST'])
 def keyShowcase():
+    private_key = session.get('private_key', None)
+    if private_key is None:
+        return redirect(url_for('views.home'))
+    return render_template("key_show.html", private_key=private_key, user=current_user)
+
+@auth.route('/download_key', methods=['POST', 'GET'])
+def download():
     private_key = session.pop('private_key', None)
     if private_key is None:
         return redirect(url_for('views.home'))
+    
+    return Response(
+        private_key,
+        mimetype="text/pem",
+        headers={"Content-disposition":
+                 "attachment; filename=private_key.pem"})
+    
 
-    # return private key to user
-    return render_template("key_show.html", private_key=private_key, user=current_user)

@@ -1,11 +1,13 @@
 from email.utils import parseaddr
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session, send_from_directory, current_app
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, send_from_directory, current_app, send_file
 from .models import User
 from . import db, logger  # means from __init__.py import db
 from flask_login import login_required, current_user
 from .models import ENOFT
 from .ENOFT_creator import ENOFT_creator
-import os
+import io
+from .ENOFT_exporter import ENOFT_export
+import base64
 
 
 user_profile = Blueprint('user_profile', __name__)
@@ -35,7 +37,50 @@ def uploads(path):
     owner_email = ENOFT.query.filter_by(image_path=path).first().owner_email
     session_email = parseaddr(session['name'])[1]
     owned = True if session_email == owner_email else False
-    if not owned:
+    force_lossy = User.query.filter_by(email=session_email).first().never_full
+    if not owned or force_lossy:
         return send_from_directory(current_app.config['LOSSY_IMAGE_UPLOADS'], path)
     else:
         return send_from_directory(current_app.config['FULL_IMAGE_UPLOADS'], path)
+
+
+
+
+@user_profile.route('/export_<path:path>', methods=['GET', 'POST'])
+@login_required
+def export(path):
+    if request.method == 'GET':
+        return render_template("export.html", user=current_user, img_path=path)
+    
+    
+    if request.method == 'POST':
+        z = ''
+        try:
+            z = ENOFT_export()
+            z = z.export
+        except Exception as e:
+            print(e)
+            flash('Error during export', 'error')
+            return redirect(url_for('user_profile.profile', email=current_user.email))
+
+        session['img_path'] = path
+        return render_template("show_serialization.html", user=current_user, certificate=z)
+    
+
+@user_profile.route('/download_image', methods=['GET', 'POST'])
+@login_required
+def download_image():
+    path = session.pop('img_path', None)
+    if path is None:
+        return 
+    return send_from_directory(current_app.config['FULL_IMAGE_UPLOADS'], path)
+
+
+
+
+
+
+
+
+
+

@@ -9,6 +9,7 @@ class User(db.Model, UserMixin):
     public_key = db.Column(db.String(150))
     name = db.Column(db.String(150))
     enofts = db.relationship('ENOFT')
+    never_full = db.Column(db.Boolean, default=False)
 
 
 class ENOFT(db.Model):

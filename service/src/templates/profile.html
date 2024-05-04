@@ -17,9 +17,17 @@ content %}
 </div>
 {% endif %} {% endif %}
 
-<div>
-  {% for path in images %}
-  <img src="{{ url_for('user_profile.uploads', path=path) }}" alt="image" />
+<ul class="list-group list-group-flush" id="ENOFTs">
+  {% for img_path in images %}
+  <li class="list-group-item">
+    <a href="/export_{{ img_path }}" class="btn btn-primary">
+      <img
+        src="uploads/{{ img_path }}"
+        alt="image"
+        style="width: 100%; height: 100%"
+      />
+    </a>
+  </li>
   {% endfor %}
-</div>
+</ul>
 {% endblock %}

@@ -85,7 +85,9 @@ class ENOFT_creator:
         print("Full save path: ", full_save_path)
         self.img.save(full_save_path)
         # TODO: generate lossy image
-        self.img.save(lossy_save_path)
+        new_size = (self.img.size[0]//4, self.img.size[1]//4)
+        small_image = self.img.resize(new_size)
+        small_image.save(lossy_save_path)
 
         new_enoft = ENOFT(image_path=file_name,
                           certificate=certificate, owner_email=current_user.email)
