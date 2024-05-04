@@ -9,13 +9,6 @@ from cryptography.hazmat.backends import default_backend
 from multiprocessing import Process, Manager
 
 
-def check_file_existence():
-    if 'private_key' not in request.files:
-        flash('Invalid Image', 'error')
-        return False
-    return True
-
-
 def get_serialized(response):
     response['data'] = ''
     response['error'] = ''
