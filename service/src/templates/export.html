@@ -19,6 +19,16 @@
     <input type="file" name="private_key" />
     <label for="password">Password</label>
     <input type="password" name="password" />
+    <input list="encryption_algorithms" name="encryption_algorithm" />
+    <datalist id="encryption_algorithms">
+      <option value="Best"></option>
+      <option value="PBESv1SHA1And3KeyTripleDESCBC"></option>
+      <option value="PBESv1SHA1And40BitRC2CBC"></option>
+      <option value="PBESv1SHA1And128BitRC4"></option>
+      <option value="PBESv2SHA256AndAES256CBC"></option>
+      <option value="SHA512"></option>
+    </datalist>
+
     <input type="hidden" value="{{img_path}}" name="img" />
     <input type="submit" class="btn btn-primary" />
   </form>

@@ -3,10 +3,12 @@ from . import db, logger
 from .models import ENOFT
 import base64
 import cryptography
-from cryptography.hazmat.primitives.serialization import PrivateFormat
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.serialization import PrivateFormat, BestAvailableEncryption, pkcs12
+from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.backends import default_backend
 from multiprocessing import Process, Manager
+
+
 
 
 def get_serialized(response):
@@ -21,9 +23,9 @@ def get_serialized(response):
         certificate_decoded = base64.b64decode(certificate)
         certificate_decerialized = cryptography.x509.load_pem_x509_certificate(
             certificate_decoded, default_backend())
+        encryption_algorithm = get_encryption_algorithm(response)
 
-        encryption_algorithm = PrivateFormat.PKCS12.encryption_builder().hmac_hash(
-            cryptography.hazmat.primitives.hashes.SHA256()).build(str.encode(response['password']))
+                
         private_key = serialization.load_pem_private_key(
             response['private_key'], password=None, backend=default_backend())
 
@@ -43,6 +45,39 @@ def get_serialized(response):
     pkcs12_data = base64.b64encode(pkcs12_data).decode('utf-8')
     return pkcs12_data
 
+def get_encryption_algorithm(response):
+    match response['encryption_algorithm']:
+        case 'PBESv1SHA1And3KeyTripleDESCBC':
+            encryption_algorithm = PrivateFormat.PKCS12.encryption_builder().\
+                    kdf_rounds(50000).\
+                    key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC).\
+                    build(str.encode(response['password']))
+                    
+        case 'PBESv1SHA1And40BitRC2CBC':
+            encryption_algorithm = PrivateFormat.PKCS12.encryption_builder().\
+                    kdf_rounds(50000).\
+                    key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And40BitRC2CBC).\
+                    build(str.encode(response['password']))
+                    
+        case 'PBESv1SHA1And128BitRC4':
+            encryption_algorithm = PrivateFormat.PKCS12.encryption_builder().\
+                    kdf_rounds(50000).\
+                    key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And128BitRC4).\
+                    build(str.encode(response['password']))
+                    
+        case 'PBESv2SHA256AndAES256CBC':
+            encryption_algorithm = PrivateFormat.PKCS12.encryption_builder().\
+                    kdf_rounds(50000).\
+                    key_cert_algorithm(pkcs12.PBES.PBESv2SHA256AndAES256CBC).\
+                    hmac_hash(hashes.SHA256()).build(str.encode(response['password']))
+                    
+        case 'SHA512':
+            encryption_algorithm = PrivateFormat.PKCS12.encryption_builder().hmac_hash(
+                    cryptography.hazmat.primitives.hashes.SHA512()).build(str.encode(response['password']))
+        case _:
+            encryption_algorithm = BestAvailableEncryption(str.encode(response['password']))
+    return encryption_algorithm
+
 
 def run():
     if 'private_key' not in request.files:
@@ -53,15 +88,19 @@ def run():
     if not enoft:
         return {'error': 'Invalid Image'}
     res = {'error': 'serialization did not complete'}
-    with Manager() as manager:
-        res = manager.dict()
-        res['enoft'] = enoft
-        res['password'] = request.form['password']
-        res['private_key'] = request.files['private_key'].read()
+    try:
+        with Manager() as manager:
+            res = manager.dict()
+            res['enoft'] = enoft
+            res['password'] = request.form['password']
+            res['private_key'] = request.files['private_key'].read()
+            res['encryption_algorithm'] = request.form['encryption_algorithm']
 
-        t = Process(target=get_serialized, args=(res,))
-        t.start()
-        t.join()
-        res = dict(res)
+            t = Process(target=get_serialized, args=(res,))
+            t.start()
+            t.join()
+            res = dict(res)
+    except Exception as e:
+        res['error'] = str(e)
 
     return res
