@@ -6,7 +6,7 @@ from flask_login import login_required, current_user
 from .models import ENOFT
 from .ENOFT_creator import ENOFT_creator
 import io
-from .ENOFT_exporter import ENOFT_export
+from .ENOFT_exporter import run as ENOFT_export
 import base64
 
 
@@ -51,19 +51,13 @@ async def export(path):
         return render_template("export.html", user=current_user, img_path=path)
 
     if request.method == 'POST':
-        z = ''
-        try:
-            z = ENOFT_export()
-            print("before run")
-            z = await z.run()
-            print("after run")
-        except Exception as e:
-            print(e)
+        res = ENOFT_export()
+        if res['error'] != '':
             flash('Error during export', 'error')
             return redirect(url_for('user_profile.profile', email=current_user.email))
 
         session['img_path'] = path
-        return render_template("show_serialization.html", user=current_user, certificate=z)
+        return render_template("show_serialization.html", user=current_user, certificate=res['data'])
 
 
 @user_profile.route('/download_image', methods=['GET', 'POST'])
