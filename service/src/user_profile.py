@@ -53,7 +53,7 @@ async def export(path):
     if request.method == 'POST':
         res = ENOFT_export()
         if res['error'] != '':
-            flash('Error during export', 'error')
+            flash('Error during export: '+ res['error'], 'error')
             return redirect(url_for('user_profile.profile', email=current_user.email))
 
         session['img_path'] = path

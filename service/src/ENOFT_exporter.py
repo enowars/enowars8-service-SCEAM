@@ -22,19 +22,19 @@ def get_serialized(response):
     enoft = response['enoft']
     if not enoft:
         return None
-
-    certificate = enoft.certificate
-    certificate_decoded = base64.b64decode(certificate)
-    certificate_decerialized = cryptography.x509.load_pem_x509_certificate(
-        certificate_decoded, default_backend())
-
-    encryption_algorithm = PrivateFormat.PKCS12.encryption_builder().hmac_hash(
-        cryptography.hazmat.primitives.hashes.SHA256()).build(str.encode(response['password']))
-    private_key = serialization.load_pem_private_key(
-        response['private_key'], password=None, backend=default_backend())
-
     # catch exceptions and forward them
     try:
+        certificate = enoft.certificate
+        certificate_decoded = base64.b64decode(certificate)
+        certificate_decerialized = cryptography.x509.load_pem_x509_certificate(
+            certificate_decoded, default_backend())
+
+        encryption_algorithm = PrivateFormat.PKCS12.encryption_builder().hmac_hash(
+            cryptography.hazmat.primitives.hashes.SHA256()).build(str.encode(response['password']))
+        private_key = serialization.load_pem_private_key(
+            response['private_key'], password=None, backend=default_backend())
+
+    
         pkcs12_data = cryptography.hazmat.primitives.serialization.pkcs12.serialize_key_and_certificates(
             name=b'exported enoft',
             key=private_key,
@@ -52,8 +52,9 @@ def get_serialized(response):
 
 
 def run():
-    if not check_file_existence():
-        return {'error': 'Invalid Image'}
+    if 'private_key' not in request.files:
+        return {'error': 'Private Key invalid'}
+
 
     enoft = ENOFT.query.filter_by(image_path=request.form['img']).first()
     if not enoft:
