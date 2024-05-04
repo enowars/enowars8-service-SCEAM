@@ -15,4 +15,5 @@ class ENOFT(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     image_path = db.Column(db.String(10000))
     certificate = db.Column(db.String(10000))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    owner_email = db.Column(db.Integer, db.ForeignKey('user.email'))
+    creation_date = db.Column(db.DateTime(timezone=True), default=func.now())

@@ -88,7 +88,7 @@ class ENOFT_creator:
         self.img.save(lossy_save_path)
 
         new_enoft = ENOFT(image_path=file_name,
-                          certificate=certificate, user_id=current_user.id)
+                          certificate=certificate, owner_email=current_user.email)
         db.session.add(new_enoft)
         db.session.commit()
 

@@ -22,7 +22,7 @@ def profile(email):
         ENOFT_creator()
 
     user = User.query.filter_by(email=email).first()
-    enofts = ENOFT.query.filter_by(user_id=user.id).all()
+    enofts = ENOFT.query.filter_by(owner_email=user.email).all()
     file_names = [e.image_path for e in enofts]
     name = user.name + " <" + user.email + ">"
 
@@ -32,7 +32,7 @@ def profile(email):
 @user_profile.route('/uploads/<path:path>', methods=['GET', 'POST'])
 @login_required
 def uploads(path):
-    owner_email = ENOFT.query.filter_by(image_path=path).first().email
+    owner_email = ENOFT.query.filter_by(image_path=path).first().owner_email
     session_email = parseaddr(session['name'])[1]
     owned = True if session_email == owner_email else False
     if not owned:

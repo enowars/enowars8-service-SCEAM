@@ -36,6 +36,7 @@ def create_app():
     app.config['LOSSY_IMAGE_UPLOADS'] = os.path.join(UPLOAD_FOLDER, 'lossy')
     app.config['ALLOWED_EXTENSIONS'] = {'PNG'}
     app.config['NAME'] = 'master'
+    app.config['PAGE_SIZE'] = 10
     app.config['RSA_KEY'] = rsa.generate_private_key(
         public_exponent=65537, key_size=4096)
     print("App root Path: ", app.root_path)
