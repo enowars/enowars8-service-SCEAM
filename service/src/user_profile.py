@@ -37,7 +37,7 @@ async def uploads(path):
     owner_email = ENOFT.query.filter_by(image_path=path).first().owner_email
     session_email = parseaddr(session['name'])[1]
     owned = True if session_email == owner_email else False
-    force_lossy = User.query.filter_by(email=session_email).first().never_full
+    force_lossy = User.query.filter_by(email=owner_email).first().never_full
     if not owned or force_lossy:
         return send_from_directory(current_app.config['LOSSY_IMAGE_UPLOADS'], path)
     else:
