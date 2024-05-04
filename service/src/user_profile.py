@@ -15,7 +15,7 @@ user_profile = Blueprint('user_profile', __name__)
 
 @user_profile.route('/profile_<email>', methods=['GET', 'POST'])
 @login_required
-def profile(email):
+async def profile(email):
 
     session_email = parseaddr(session['name'])[1]
     owned = True if session_email == email else False
@@ -33,7 +33,7 @@ def profile(email):
 
 @user_profile.route('/uploads/<path:path>', methods=['GET', 'POST'])
 @login_required
-def uploads(path):
+async def uploads(path):
     owner_email = ENOFT.query.filter_by(image_path=path).first().owner_email
     session_email = parseaddr(session['name'])[1]
     owned = True if session_email == owner_email else False
@@ -46,7 +46,7 @@ def uploads(path):
 
 @user_profile.route('/export_<path:path>', methods=['GET', 'POST'])
 @login_required
-def export(path):
+async def export(path):
     if request.method == 'GET':
         return render_template("export.html", user=current_user, img_path=path)
 
@@ -54,8 +54,11 @@ def export(path):
         z = ''
         try:
             z = ENOFT_export()
-            z = z.export
+            print("before run")
+            z = await z.run()
+            print("after run")
         except Exception as e:
+            print(e)
             flash('Error during export', 'error')
             return redirect(url_for('user_profile.profile', email=current_user.email))
 
@@ -65,7 +68,7 @@ def export(path):
 
 @user_profile.route('/download_image', methods=['GET', 'POST'])
 @login_required
-def download_image():
+async def download_image():
     path = session.pop('img_path', None)
     if path is None:
         return

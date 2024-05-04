@@ -7,6 +7,7 @@ import zipfile
 from cryptography.hazmat.primitives.serialization import PrivateFormat
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
+import threading # ???
 
 
 class ENOFT_export:
@@ -15,31 +16,38 @@ class ENOFT_export:
         self.valid = True
         self.img_path = request.form['img']
         self.password = request.form['password']
-        self.check_file_existence()
-        self.validate_image()
-        self.get_serialized()
+        self.export = ''
+        
+        
+    async def run(self):
+        await self.check_file_existence()
+        await self.validate_image()
+        print("before get_serialized")
+        res =  await self.get_serialized()
+        print("after get_serialized")
+        return res
 
     def shortcuircuit(foo):
-        def check(self):
+        async def check(self):
             if not self.valid:
                 return
-            foo(self)
+            await foo(self)
         return check
 
     @shortcuircuit
-    def check_file_existence(self):
+    async def check_file_existence(self):
         if 'private_key' not in request.files:
             flash('No file part', 'error')
             self.valid = False
 
-    def validate_image(self):
+    async def validate_image(self):
         self.enoft = ENOFT.query.filter_by(image_path=self.img_path).first()
         if not self.enoft:
             self.valid = False
             return
 
     @shortcuircuit
-    def get_serialized(self):
+    async def get_serialized(self):
         certificate = self.enoft.certificate
         certificate_decoded = base64.b64decode(certificate)
         certificate_decerialized = cryptography.x509.load_pem_x509_certificate(

@@ -15,7 +15,7 @@ auth = Blueprint('auth', __name__)
 
 
 @auth.route('/login', methods=['GET', 'POST'])
-def login():
+async def login():
     # handle first page request
     if request.method == 'GET':
         return render_template("login.html", user=current_user)
@@ -59,13 +59,13 @@ def login_error_handler(msg):
 
 @auth.route('/logout')
 @login_required
-def logout():
+async def logout():
     logout_user()
     return redirect(url_for('auth.login'))
 
 
 @auth.route('/sign-up', methods=['GET', 'POST'])
-def sign_up():
+async def sign_up():
     if request.method == 'POST':
         email = request.form.get('email')
         name = request.form.get('name')
@@ -120,7 +120,7 @@ def set_session_name(user):
 
 
 @auth.route('/key', methods=['GET', 'POST'])
-def keyShowcase():
+async def keyShowcase():
     private_key = session.get('private_key', None)
     if private_key is None:
         return redirect(url_for('views.home'))
@@ -128,7 +128,7 @@ def keyShowcase():
 
 
 @auth.route('/download_key', methods=['POST', 'GET'])
-def download():
+async def download():
     private_key = session.pop('private_key', None)
     if private_key is None:
         return redirect(url_for('views.home'))

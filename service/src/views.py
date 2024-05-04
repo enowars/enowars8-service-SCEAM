@@ -3,19 +3,18 @@ from flask_login import login_required, current_user
 # from .models import Note
 from . import db, logger
 from .models import ENOFT
-import json
 
 
 views = Blueprint('views', __name__)
 
 
 @views.route('/', methods=['GET', 'POST'])
-def home():
+async def home():
     return redirect(url_for('views.page', number=1))
 
 
 @views.route('/page_<int:number>', methods=['GET'])
-def page(number):
+async def page(number):
     all_images = ENOFT.query.all()
     all_images.sort(key=lambda x: x.creation_date, reverse=True)
     if not all_images:
