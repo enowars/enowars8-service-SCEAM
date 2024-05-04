@@ -39,7 +39,6 @@ def create_app():
     app.config['PAGE_SIZE'] = 10
     app.config['RSA_KEY'] = rsa.generate_private_key(
         public_exponent=65537, key_size=4096)
-    print("App root Path: ", app.root_path)
     db.init_app(app)
 
     Path(app.config['FULL_IMAGE_UPLOADS']).mkdir(parents=True, exist_ok=True)

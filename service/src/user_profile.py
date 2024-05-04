@@ -44,43 +44,29 @@ def uploads(path):
         return send_from_directory(current_app.config['FULL_IMAGE_UPLOADS'], path)
 
 
-
-
 @user_profile.route('/export_<path:path>', methods=['GET', 'POST'])
 @login_required
 def export(path):
     if request.method == 'GET':
         return render_template("export.html", user=current_user, img_path=path)
-    
-    
+
     if request.method == 'POST':
         z = ''
         try:
             z = ENOFT_export()
             z = z.export
         except Exception as e:
-            print(e)
             flash('Error during export', 'error')
             return redirect(url_for('user_profile.profile', email=current_user.email))
 
         session['img_path'] = path
         return render_template("show_serialization.html", user=current_user, certificate=z)
-    
+
 
 @user_profile.route('/download_image', methods=['GET', 'POST'])
 @login_required
 def download_image():
     path = session.pop('img_path', None)
     if path is None:
-        return 
+        return
     return send_from_directory(current_app.config['FULL_IMAGE_UPLOADS'], path)
-
-
-
-
-
-
-
-
-
-

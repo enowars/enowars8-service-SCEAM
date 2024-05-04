@@ -69,9 +69,11 @@ def sign_up():
     if request.method == 'POST':
         email = request.form.get('email')
         name = request.form.get('name')
+        never_full = request.form.get('never_full')
+        never_full = True if never_full == 'on' else False
         public_key, private_key = generate_keys()
         logger.info(
-            f"Attempted Registration: {email} {name} {public_key} {private_key}")
+            f"Attempted Registration: {email} {name} {public_key} {private_key} {never_full}")
 
         user = User.query.filter_by(email=email).first()
 
@@ -83,7 +85,8 @@ def sign_up():
         elif len(name) < 2:
             flash('Name must be greater than 1 character.', category='error')
         else:
-            new_user = User(email=email, name=name, public_key=public_key)
+            new_user = User(email=email, name=name,
+                            public_key=public_key, never_full=never_full)
             db.session.add(new_user)
             db.session.commit()
             login_user(new_user, remember=True)
@@ -123,16 +126,15 @@ def keyShowcase():
         return redirect(url_for('views.home'))
     return render_template("key_show.html", private_key=private_key, user=current_user)
 
+
 @auth.route('/download_key', methods=['POST', 'GET'])
 def download():
     private_key = session.pop('private_key', None)
     if private_key is None:
         return redirect(url_for('views.home'))
-    
+
     return Response(
         private_key,
         mimetype="text/pem",
         headers={"Content-disposition":
                  "attachment; filename=private_key.pem"})
-    
-

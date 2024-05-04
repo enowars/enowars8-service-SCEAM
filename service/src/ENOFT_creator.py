@@ -62,7 +62,6 @@ class ENOFT_creator:
             img.verify()
             self.img = Image.open(self.file)
         except Exception as e:
-            print(e)
             flash('Invalid image', 'error')
             self.valid = False
 
@@ -82,7 +81,6 @@ class ENOFT_creator:
             current_app.config["LOSSY_IMAGE_UPLOADS"], file_name)
         certificate = build_cert(self.img)
 
-        print("Full save path: ", full_save_path)
         self.img.save(full_save_path)
         # TODO: generate lossy image
         new_size = (self.img.size[0]//4, self.img.size[1]//4)
