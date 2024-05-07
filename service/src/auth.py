@@ -70,10 +70,12 @@ async def sign_up():
         email = request.form.get('email')
         name = request.form.get('name')
         never_full = request.form.get('never_full')
+        vendor_lock = request.form.get('vendor_lock')
         never_full = True if never_full == 'on' else False
+        vendor_lock = True if vendor_lock == 'on' else False
         public_key, private_key = generate_keys()
         logger.info(
-            f"Attempted Registration: {email} {name} {public_key} {private_key} {never_full}")
+            f"Attempted Registration: {email} {name} {public_key} {private_key} {never_full} {vendor_lock}")
 
         user = User.query.filter_by(email=email).first()
 
@@ -86,7 +88,7 @@ async def sign_up():
             flash('Name must be greater than 1 character.', category='error')
         else:
             new_user = User(email=email, name=name,
-                            public_key=public_key, never_full=never_full)
+                            public_key=public_key, never_full=never_full, vendor_lock=vendor_lock)
             db.session.add(new_user)
             db.session.commit()
             login_user(new_user, remember=True)

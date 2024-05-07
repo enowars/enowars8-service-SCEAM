@@ -10,6 +10,7 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(150))
     enofts = db.relationship('ENOFT')
     never_full = db.Column(db.Boolean, default=False)
+    vendor_lock = db.Column(db.Boolean, default=False)
 
 
 class ENOFT(db.Model):

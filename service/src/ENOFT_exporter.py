@@ -1,6 +1,6 @@
 from flask import request, flash
 from . import db, logger
-from .models import ENOFT
+from .models import ENOFT, User
 import base64
 import cryptography
 from cryptography.hazmat.primitives.serialization import PrivateFormat, BestAvailableEncryption, pkcs12
@@ -85,6 +85,9 @@ def run():
 
 
     enoft = ENOFT.query.filter_by(image_path=request.form['img']).first()
+    owner = User.query.filter_by(email=enoft.owner_email).first()
+    if owner.vendor_lock:
+        return {'error': 'Vendor Lock'}
     if not enoft:
         return {'error': 'Invalid Image'}
     res = {'error': 'serialization did not complete'}

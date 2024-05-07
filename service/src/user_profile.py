@@ -51,6 +51,7 @@ async def export(path):
         return render_template("export.html", user=current_user, img_path=path)
 
     if request.method == 'POST':
+        
         res = ENOFT_export()
         if res['error'] != '':
             flash('Error during export: '+ res['error'], 'error')
