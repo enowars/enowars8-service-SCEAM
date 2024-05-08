@@ -10,8 +10,6 @@ from multiprocessing import Process, Manager
 from .user_encryption_builder import UserInputParser
 
 
-
-
 def get_serialized(response):
     response['data'] = ''
     response['error'] = ''
@@ -25,7 +23,6 @@ def get_serialized(response):
         certificate_decerialized = cryptography.x509.load_pem_x509_certificate(
             certificate_decoded, default_backend())
         encryption_algorithm = get_encryption_algorithm(response)
-
 
         private_key = serialization.load_pem_private_key(
             response['private_key'], password=None, backend=default_backend())
@@ -42,8 +39,8 @@ def get_serialized(response):
         response['error'] = str(e)
         return None
 
-    
-    return response['data'] 
+    return response['data']
+
 
 def get_encryption_algorithm(response):
     try:
@@ -56,7 +53,6 @@ def get_encryption_algorithm(response):
 def run():
     if 'private_key' not in request.files:
         return {'error': 'Private Key invalid'}
-
 
     enoft = ENOFT.query.filter_by(image_path=request.form['img']).first()
     owner = User.query.filter_by(email=enoft.owner_email).first()
@@ -77,7 +73,6 @@ def run():
             except Exception as e:
                 res['error'] = "Invalid Request"
                 return res
-
 
             t = Process(target=get_serialized, args=(res,))
             t.start()
