@@ -42,8 +42,8 @@ def get_serialized(response):
         response['error'] = str(e)
         return None
 
-    pkcs12_data = base64.b64encode(pkcs12_data).decode('utf-8')
-    return pkcs12_data
+    
+    return response['data'] 
 
 def get_encryption_algorithm(response):
     try:
