@@ -58,6 +58,7 @@ async def export(path):
             return redirect(url_for('user_profile.profile', email=current_user.email))
 
         session['img_path'] = path
+        print(res['data'])
         return render_template("show_serialization.html", user=current_user, certificate=res['data'])
 
 
