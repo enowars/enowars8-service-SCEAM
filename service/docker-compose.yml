@@ -1,11 +1,10 @@
-version: '3'
 services:
-  n0t3b00k:
-    build: .
-    # The code should be copied into the container using COPY.
-    # Mount the data folder writable, so that information can be persisted across restarts.
+  service:
+    build:
+      context: .
     volumes:
-      - ./data/:/data:rw
-    # Define the port mapping (external:internal port)
+      - ./instance:/instance
+      - ./instance/uploads:/src/uploads
+
     ports:
-      - "2323:8000"
+      - "5000:5000"

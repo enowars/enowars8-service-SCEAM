@@ -7,9 +7,9 @@ import os
 from cryptography.hazmat.primitives.asymmetric import rsa
 from pathlib import Path
 
-logger = logging.getLogger("TODO: Set logger name here")
+logger = logging.getLogger("ENOFT_LOGER")
 logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler("service.log")
+fh = logging.FileHandler("../instance/service.log")
 fh.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 fh.setFormatter(formatter)
