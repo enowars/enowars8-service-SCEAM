@@ -41,7 +41,7 @@ class UserInputParser():
         if input in hash_alg:
             self.builder = self.builder.hmac_hash(getattr(hashes, input)())
         else:
-            raise Exception("Invalid Syntax")
+            raise Exception("Invalid Hashing Algorithm")
 
         self.user_input = self.user_input[next_bracket + 2:]
 
@@ -52,7 +52,7 @@ class UserInputParser():
         try:
             number = int(number)
         except:
-            raise Exception("Invalid Syntax")
+            raise Exception("Invalid kdf rounds")
 
         self.builder = self.builder.kdf_rounds(number)
         self.user_input = self.user_input[next_bracket + 1:]
@@ -69,7 +69,7 @@ class UserInputParser():
                 pkcs12.PBES.PBESv2SHA256AndAES256CBC)
 
         else:
-            raise Exception("Invalid Syntax")
+            raise Exception("Invalid certification Algorithm")
         self.user_input = self.user_input[next_bracket + 1:]
 
 
