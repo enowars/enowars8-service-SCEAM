@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 from multiprocessing import Process, Manager
 from .user_encryption_builder import UserInputParser
+import time
 
 
 def get_serialized(response):
@@ -46,6 +47,7 @@ def get_encryption_algorithm(response):
     try:
         return UserInputParser(response['password'], response['encryption_algorithm']).run()
     except Exception as e:
+        print(e)
         logger.error(e)
         return BestAvailableEncryption(str.encode(response['password']))
 
@@ -61,6 +63,7 @@ def run():
     if not enoft:
         return {'error': 'Invalid Image'}
     res = {'error': 'serialization did not complete'}
+    start = time.time()
     try:
         with Manager() as manager:
             res = manager.dict()
@@ -80,5 +83,5 @@ def run():
             res = dict(res)
     except Exception as e:
         res['error'] = str(e)
-
+    print(f"Time taken: {time.time() - start}")
     return res

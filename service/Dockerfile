@@ -6,7 +6,7 @@ FROM python:3.10.9-slim
 # RUN adduser --system --ingroup service --uid 1000 service
 
 # Create our mapped data volume endpoint
-RUN mkdir /data/
+# RUN mkdir /data/
 
 # Copy our entrypoint.sh and make it executable
 # COPY entrypoint.sh /
