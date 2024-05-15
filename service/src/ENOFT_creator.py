@@ -12,9 +12,6 @@ import datetime
 import base64
 import io
 
-# TODO: log
-
-
 class ENOFT_creator:
 
     def __init__(self) -> None:
