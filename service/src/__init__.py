@@ -34,7 +34,7 @@ def create_app():
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
     app.config['FULL_IMAGE_UPLOADS'] = os.path.join(UPLOAD_FOLDER, 'full')
     app.config['LOSSY_IMAGE_UPLOADS'] = os.path.join(UPLOAD_FOLDER, 'lossy')
-    app.config['ALLOWED_EXTENSIONS'] = {'PNG'}
+    app.config['ALLOWED_EXTENSIONS'] = {'PNG', 'JPG', 'JPEG', 'GIF'}
     app.config['NAME'] = 'master'
     app.config['PAGE_SIZE'] = 10
     app.config['RSA_KEY'] = rsa.generate_private_key(

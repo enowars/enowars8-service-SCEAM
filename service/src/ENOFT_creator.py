@@ -12,6 +12,7 @@ import datetime
 import base64
 import io
 
+
 class ENOFT_creator:
 
     def __init__(self) -> None:

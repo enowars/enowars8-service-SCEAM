@@ -18,10 +18,12 @@ def register(session, email, name):
     res = s.post(ip+'download_key')
     return res
 
+
 def login(session, email, private_key):
     data = {'email': email, 'private_key': private_key}
     res = session.post(ip+'login', data=data)
     return res
+
 
 def upload_image(session, image_path, email):
     with open(image_path, 'rb') as f:
@@ -55,9 +57,9 @@ for img in imgs:
     res = s.get(ip+img)
     with open(os.path.join('images', img.split('/')[-1]), 'wb') as f:
         f.write(res.content)
-        
+
 s = requests.Session()
-email = generate_random_string(10) + "@google.com"
+email = generate_random_string(10) + "@" + generate_random_string(5) + ".scam"
 res = register(s, email, 'test')
 print("registration code: ", res.status_code)
 res = upload_image(s, img_path, email)

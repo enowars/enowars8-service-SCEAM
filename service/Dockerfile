@@ -29,4 +29,4 @@ RUN pip install -r requirements.txt
 
 # Run the service
 # ENTRYPOINT ["/entrypoint.sh"]
-CMD gunicorn --bind 0.0.0.0:5000 main:app
+CMD gunicorn --bind 0.0.0.0:8008 main:app
