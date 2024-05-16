@@ -40,12 +40,14 @@ class InteractionManager:
         try:
             r = await self.client.post(self.address + 'sign-up', data=data)
         except Exception as e:
-            self.logger.error(f"Error registering: {data}")
+            self.logger.error(
+                f"Error registering: {data} ip: {self.address + 'sign-up'}")
             raise MumbleException("Error registering")
         try:
             r = await self.client.post(self.address + 'download_key')
         except Exception as e:
-            self.logger.error(f"Error downloading key {data}")
+            self.logger.error(
+                f"Error downloading key {data}, ip: {self.address + 'download_key'}")
             raise MumbleException("Error downloading key")
         self.key = r.content
         self.logger.info(f"Registration Key: {r.content}")
@@ -57,7 +59,8 @@ class InteractionManager:
         try:
             r = await self.client.post(self.address + 'login', data=data)
         except Exception as e:
-            self.logger.error(f"Error logging in: {data}")
+            self.logger.error(
+                f"Error logging in: {data}, ip: {self.address + 'login'}")
             raise MumbleException("Error logging in")
         return r
 
@@ -67,13 +70,19 @@ class InteractionManager:
         try:
             r = await self.client.post(self.address + 'profile_' + self.email, files=files)
         except Exception as e:
-            self.logger.error(f"Error uploading image {self.email}")
+            self.logger.error(
+                f"Error uploading image {self.email}, ip: {self.address + 'profile_' + self.email}")
             raise MumbleException("Error uploading image")
         return r
 
     async def download_profile_images(self):
         self.logger.info(f"Downloading profile")
-        r = await self.client.get(self.address + 'profile_' + self.email)
+        try:
+            r = await self.client.get(self.address + 'profile_' + self.email)
+        except Exception as e:
+            self.logger.error(
+                f"Error downloading profile {self.email}, ip: {self.address + 'profile_' + self.email}")
+            raise MumbleException("Error downloading profile")
         soup = BeautifulSoup(r.text, 'html.parser')
         imgs = soup.find_all('img')
         imgs = [img['src'] for img in imgs]
@@ -82,7 +91,8 @@ class InteractionManager:
             try:
                 r = await self.client.get(self.address + e)
             except Exception as e:
-                self.logger.error(f"Error downloading image {e}")
+                self.logger.error(
+                    f"Error downloading image {e}, ip: {self.address + e}")
                 raise MumbleException("Error downloading image")
             imgs[index] = Image.open(io.BytesIO(r.content))
         self.logger.info(f"Images decoded")

@@ -32,7 +32,6 @@ async def profile(email):
 
 
 @user_profile.route('/uploads/<path:path>', methods=['GET', 'POST'])
-@login_required
 async def uploads(path):
     owner_email = ENOFT.query.filter_by(image_path=path).first().owner_email
     session_email = parseaddr(session['name'])[1]
