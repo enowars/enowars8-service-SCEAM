@@ -7,13 +7,15 @@ import io
 from logging import LoggerAdapter
 from enochecker3 import MumbleException
 
+success_login = "Logged in successfully!"
+
 
 def generate_random_string(length):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
 
 class InteractionManager:
-    def __init__(self, address: str, logger: LoggerAdapter, email_name_key: dict = None) -> None:
+    def __init__(self, address: str, logger: LoggerAdapter, forced_name: str = None, email_name_key: dict = None) -> None:
         self.logger = logger
         self.logger.info(f"Creating InteractionManager with {address}")
         if email_name_key:
@@ -23,11 +25,13 @@ class InteractionManager:
             self.key = email_name_key['key']
         else:
             self.email, self.name, self.key = ("", "", "")
+        self.forced_name = forced_name
         self.address = address
         self.client = AsyncClient()
 
     async def register(self, vendor_lock: bool = False, low_quality: bool = False):
-        self.name = generate_random_string(10)
+        self.name = generate_random_string(
+            10) if not self.forced_name else self.forced_name
         self.email = self.name + "@" + generate_random_string(10) + ".scam"
         data = {'email': self.email, 'name': self.name}
         if vendor_lock:
@@ -54,19 +58,24 @@ class InteractionManager:
         return r.content
 
     async def login(self):
-        data = {'email': self.email, 'private_key': self.key, 'name': self.name}
-        self.logger.info(f"Logging in with {data}")
+        data = {'email': self.email, 'name': self.name}
+        files = {'file': self.key}
+        self.logger.info(f"Logging in with {data} and {files}")
         try:
-            r = await self.client.post(self.address + 'login', data=data)
+            r = await self.client.post(self.address + 'login', data=data, files=files, follow_redirects=True)
+            self.logger.info(f"Login response: {r.content.decode()}")
         except Exception as e:
             self.logger.error(
                 f"Error logging in: {data}, ip: {self.address + 'login'}")
-            raise MumbleException("Error logging in")
+            if success_login not in r.content.decode():
+                raise MumbleException("Error logging in, invalid credentials")
+            raise MumbleException("Error logging in response invalid")
         return r
 
     async def upload_image(self, image: bytes):
         files = {'file': image}
-        self.logger.info(f"Uploading image")
+        self.logger.info(
+            f"Uploading image to profile: {self.email} flag: {image}")
         try:
             r = await self.client.post(self.address + 'profile_' + self.email, files=files)
         except Exception as e:
@@ -75,15 +84,20 @@ class InteractionManager:
             raise MumbleException("Error uploading image")
         return r
 
-    async def download_profile_images(self):
-        self.logger.info(f"Downloading profile")
+    async def download_profile_images_from_self(self):
+        return await self.download_profile_images_from_email(self.email)
+
+    async def download_profile_images_from_email(self, email):
+        self.logger.info(
+            f"Downloading profile of {email}, url: {self.address + 'profile_' + email}")
         try:
-            r = await self.client.get(self.address + 'profile_' + self.email)
+            r = await self.client.get(self.address + 'profile_' + email, follow_redirects=True)
         except Exception as e:
             self.logger.error(
-                f"Error downloading profile {self.email}, ip: {self.address + 'profile_' + self.email}")
+                f"Error downloading profile {email}, ip: {self.address + 'profile_' + email}")
             raise MumbleException("Error downloading profile")
-        soup = BeautifulSoup(r.text, 'html.parser')
+        self.logger.info(f"Profile downloaded: {r.content.decode()}")
+        soup = BeautifulSoup(r.content.decode(), 'html.parser')
         imgs = soup.find_all('img')
         imgs = [img['src'] for img in imgs]
         self.logger.info(f"Found images: {imgs}")
@@ -95,7 +109,8 @@ class InteractionManager:
                     f"Error downloading image {e}, ip: {self.address + e}")
                 raise MumbleException("Error downloading image")
             imgs[index] = Image.open(io.BytesIO(r.content))
-        self.logger.info(f"Images decoded")
+        self.logger.info(f"Images decoded {imgs}")
+
         return imgs
 
     def dump_info(self):

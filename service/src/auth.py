@@ -27,6 +27,9 @@ async def login():
         email = request.form.get('email')
         private_key = request.form.get('private_key')
         if 'file' not in request.files:
+            flash("request.files: "+str(request.files), 'error')
+            flash("request.form: "+str(request.form), 'error')
+
             print(request.files)
             flash('No file part', 'error')
             return login_error_handler("Private key not found.")

@@ -44,9 +44,8 @@ def get_random_image() -> bytes:
     return data
 
 
-def read_qr_code(bytes: bytes) -> str:
+def read_qr_code(image: Image) -> str:
     # Open the GIF image using PIL
-    image = Image.open(io.BytesIO(bytes))
 
     # Loop through each frame of the possible GIF
     for frame in range(image.n_frames):
