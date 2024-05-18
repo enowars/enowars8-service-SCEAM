@@ -54,7 +54,7 @@ class InteractionManager:
         return r.content
 
     async def login(self):
-        data = {'email': self.email, 'private_key': self.key}
+        data = {'email': self.email, 'private_key': self.key, 'name': self.name}
         self.logger.info(f"Logging in with {data}")
         try:
             r = await self.client.post(self.address + 'login', data=data)

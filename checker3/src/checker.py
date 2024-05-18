@@ -16,15 +16,12 @@ SERVICE_PORT = 8008
 # from httpx import AsyncClient
 
 
-# 0: email
-# 1: export
-
 checker = Enochecker("enoft", 8008)
 def app(): return checker.app
 
 
 @checker.putflag(0)
-async def putflag_test(
+async def putflag_email(
     task: PutflagCheckerTaskMessage,
     db: ChainDB,
     logger: LoggerAdapter
@@ -46,13 +43,14 @@ async def putflag_test(
 
 
 @checker.getflag(0)
-async def getflag_test(
-    task: PutflagCheckerTaskMessage,
+async def getflag_email(
+    task: GetflagCheckerTaskMessage,
     db: ChainDB,
     logger: LoggerAdapter
 ) -> None:
-
+    logger.info("Getting flag")
     credentials = await db.get("credentials")
+    logger.info(f"Got credentials: {credentials}")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
     m = InteractionManager(address, logger, credentials)
     await m.login()

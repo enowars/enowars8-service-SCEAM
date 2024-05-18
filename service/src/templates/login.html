@@ -1,6 +1,6 @@
 {% extends "base.html" %} {% block title %}Login{% endblock %} {% block content
 %}
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
   <h3 align="center">Login</h3>
   <div class="form-group">
     <label for="email">Email Address</label>
@@ -24,13 +24,7 @@
   </div>
   <div class="form-group">
     <label for="private_key">Private Key</label>
-    <input
-      type="password"
-      class="form-control"
-      id="private_key"
-      name="private_key"
-      placeholder="Enter private Key"
-    />
+    <input type="file" class="form-control" id="private_key" name="file" />
   </div>
   <br />
   <button type="submit" class="btn btn-primary">Login</button>

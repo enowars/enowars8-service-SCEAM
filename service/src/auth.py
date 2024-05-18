@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from io import BytesIO
 
 
@@ -21,10 +22,21 @@ async def login():
         return render_template("login.html", user=current_user)
 
     # handle form submission
-    email = request.form.get('email')
-    private_key = request.form.get('private_key')
-    name = request.form.get('name')
+    print(request.form)
+    try:
+        email = request.form.get('email')
+        private_key = request.form.get('private_key')
+        if 'file' not in request.files:
+            print(request.files)
+            flash('No file part', 'error')
+            return login_error_handler("Private key not found.")
+        private_key = request.files['file'].read()
+        private_key = load_pem_private_key(private_key, password=None)
 
+        name = request.form.get('name')
+    except Exception as e:
+        flash(e, category='error')
+        return login_error_handler("Invalid form submission.")
     user = User.query.filter_by(email=email).first()
     if user == None:
         return login_error_handler(f"User with email {email} does not exist.")
@@ -43,7 +55,8 @@ async def login():
 
 def valid_keys(private_key, user):
     example_message = b"example message to be encrypted"
-    encrypted = user.public_key.encrypt(example_message, padding.OAEP(
+    public_key = serialization.load_pem_public_key(user.public_key.encode())
+    encrypted = public_key.encrypt(example_message, padding.OAEP(
         mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
     decrypted = private_key.decrypt(encrypted, padding.OAEP(mgf=padding.MGF1(
         algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
