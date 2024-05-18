@@ -8,15 +8,11 @@ from enochecker3 import (
     PutflagCheckerTaskMessage,
     ExploitCheckerTaskMessage,
 )
-import secrets
 from typing import Optional
 from utils import InteractionManager
 import qr_codes
 
 SERVICE_PORT = 8008
-# from httpx import AsyncClient
-
-
 checker = Enochecker("enoft", 8008)
 def app(): return checker.app
 
@@ -36,7 +32,6 @@ async def putflag_email(
     await m.upload_image(qrCode)
     data = m.dump_info()
     await db.set("credentials", data)
-    data = m.dump_info()
     for key in data:
         await db.set(key, data[key])
 
@@ -86,6 +81,82 @@ async def exploit_email(
     imgs = [qr_codes.read_qr_code(img) for img in imgs]
     logger.info(f"Decoded images: {imgs}")
     return imgs[0]
+
+
+@checker.putflag(1)
+async def putflag_export(
+    task: PutflagCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter
+) -> None:
+    flag = task.flag
+    qrCode = qr_codes.create_qr_code(flag)
+    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
+    m = InteractionManager(address, logger)
+
+    await m.register(low_quality=True)
+    await m.upload_image(qrCode)
+    data = m.dump_info()
+    await db.set("credentials", data)
+    for key in data:
+        await db.set(key, data[key])
+
+    return data["email"]
+
+
+@checker.getflag(1)
+async def getflag_export(
+    task: GetflagCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter
+) -> None:
+    logger.info("Getting flag")
+    try:
+        credentials = await db.get("credentials")
+    except:
+        raise MumbleException("No credentials saved in db")
+    logger.info(f"Got credentials: {credentials}")
+    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
+    m = InteractionManager(address, logger, email_name_key=credentials)
+    try:
+        await m.login()
+    except:
+        raise MumbleException("Error logging in")
+    try:
+        imgs = await m.get_profile_image_urls(credentials["email"])
+    except:
+        raise MumbleException("Error getting profile")
+    if not imgs:
+        raise MumbleException("No images found")
+    logger.info(f"Got {len(imgs)} images")
+    img_url = imgs[0]
+    try:
+        img = await m.export_image_url(img_url)
+    except:
+        raise MumbleException("Error exporting image")
+    if not img:
+        logger.error("Image not exported")
+        raise MumbleException("No images found")
+    flag = qr_codes.read_qr_code(img)
+    logger.info(f"Decoded image: {flag}")
+    assert_equals(task.flag, flag, "Flag not found in image")
+
+
+@checker.exploit(1)
+async def exploit_export(
+    task: ExploitCheckerTaskMessage,
+    searcher: FlagSearcher,
+    logger: LoggerAdapter
+) -> Optional[str]:
+    logger.info(f"Exploiting {task.attack_info} ")
+    email = task.attack_info
+    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
+    m = InteractionManager(address, logger)
+    await m.register()
+    imgs = await m.get_profile_image_urls(email)
+    if not imgs:
+        raise MumbleException("No images found")
+    logger.info(f"Downloaded {len(imgs)} images")
 
 
 if __name__ == "__main__":

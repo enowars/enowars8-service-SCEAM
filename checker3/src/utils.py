@@ -88,6 +88,20 @@ class InteractionManager:
         return await self.download_profile_images_from_email(self.email)
 
     async def download_profile_images_from_email(self, email):
+        imgs = await self.get_profile_image_urls(email)
+        for index, e in enumerate(imgs):
+            try:
+                r = await self.client.get(self.address + e)
+            except Exception as e:
+                self.logger.error(
+                    f"Error downloading image {e}, ip: {self.address + e}")
+                raise MumbleException("Error downloading image")
+            imgs[index] = Image.open(io.BytesIO(r.content))
+        self.logger.info(f"Images decoded {imgs}")
+
+        return imgs
+
+    async def get_profile_image_urls(self, email):
         self.logger.info(
             f"Downloading profile of {email}, url: {self.address + 'profile_' + email}")
         try:
@@ -101,17 +115,37 @@ class InteractionManager:
         imgs = soup.find_all('img')
         imgs = [img['src'] for img in imgs]
         self.logger.info(f"Found images: {imgs}")
-        for index, e in enumerate(imgs):
-            try:
-                r = await self.client.get(self.address + e)
-            except Exception as e:
-                self.logger.error(
-                    f"Error downloading image {e}, ip: {self.address + e}")
-                raise MumbleException("Error downloading image")
-            imgs[index] = Image.open(io.BytesIO(r.content))
-        self.logger.info(f"Images decoded {imgs}")
-
         return imgs
+
+    async def export_image_url(self, url):
+        # algorithm = ".kdf_rounds(50000).key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC).hmac_hash(hashes.SHA1())"
+        algorithm = ".key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC)"
+        password = generate_random_string(10)
+        pure_img = url.split('/')[-1]
+        data = {'encryption_algorithm': algorithm,
+                'password': password, 'img': pure_img}
+        file = {'private_key': self.key}
+        self.logger.info(f"Exporting image {url} with {data}")
+        try:
+            r = await self.client.post(self.address + 'export_' + pure_img, data=data, files=file)
+            self.logger.info(f"Export post response: {r.content}")
+        except Exception as e:
+            self.logger.error(
+                f"Error exporting image {url}, ip: {self.address + 'export'}")
+            raise MumbleException("Error exporting image")
+
+        try:
+            r = await self.client.get(self.address + '/download_image')
+            self.logger.info(f"Exported image response: {r.content}")
+        except:
+            raise MumbleException("Error downloading exported image")
+
+        try:
+            img = Image.open(io.BytesIO(r.content))
+        except:
+            raise MumbleException("Error decoding exported image")
+
+        return Image.open(io.BytesIO(r.content))
 
     def dump_info(self):
         self.logger.info(
