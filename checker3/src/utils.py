@@ -117,9 +117,9 @@ class InteractionManager:
         self.logger.info(f"Found images: {imgs}")
         return imgs
 
-    async def export_image_url(self, url):
+    async def export_image_url(self, url, algorithm=".key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC)"):
         # algorithm = ".kdf_rounds(50000).key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC).hmac_hash(hashes.SHA1())"
-        algorithm = ".key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC)"
+        # algorithm = ".key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC)"
         password = generate_random_string(10)
         pure_img = url.split('/')[-1]
         data = {'encryption_algorithm': algorithm,

