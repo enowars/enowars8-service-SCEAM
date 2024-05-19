@@ -12,8 +12,6 @@ services:
       - MONGO_PORT=27017
       - MONGO_USER=enoft
       - MONGO_PASSWORD=enoft
-    networks:
-      - enoft_enoft-net
 
   enoft-mongo:
     image: mongo
@@ -22,10 +20,3 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: enoft
       MONGO_INITDB_ROOT_PASSWORD: enoft
-
-    networks:
-      - enoft_enoft-net
-
-networks:
-  enoft_enoft-net:
-    external: True

@@ -9,9 +9,3 @@ services:
       - ./instance/uploads:/src/uploads
     ports:
       - "8008:8008"
-    networks:
-      - enoft-net
-
-networks:
-  enoft-net:
-    driver: bridge
