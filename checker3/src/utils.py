@@ -1,4 +1,3 @@
-from httpx import AsyncClient
 import string
 import random
 from bs4 import BeautifulSoup
@@ -9,6 +8,7 @@ from enochecker3 import MumbleException
 from requests import Session
 
 success_login = "Logged in successfully!"
+retry = 5
 
 
 def generate_random_string(length):
@@ -43,13 +43,23 @@ class InteractionManager:
 
         self.logger.info(f"Registering with {data}")
         try:
-            r = self.client.post(self.address + 'sign-up', data=data)
+            for i in range(retry):
+                try:
+                    r = self.client.post(self.address + 'sign-up', data=data)
+                    break
+                except:
+                    self.logger.info(f"Retrying registration {i}")
         except Exception as e:
             self.logger.error(
                 f"Error registering: {data} ip: {self.address + 'sign-up'}")
             raise MumbleException("Error registering")
         try:
-            r = self.client.post(self.address + 'download_key')
+            for i in range(retry):
+                try:
+                    r = self.client.post(self.address + 'download_key')
+                    break
+                except:
+                    self.logger.info(f"Retrying key download {i}")
         except Exception as e:
             self.logger.error(
                 f"Error downloading key {data}, ip: {self.address + 'download_key'}")
@@ -63,9 +73,14 @@ class InteractionManager:
         files = {'file': self.key}
         self.logger.info(f"Logging in with {data} and {files}")
         try:
-            r = self.client.post(self.address + 'login',
-                                 data=data, files=files, allow_redirects=True)
-            self.logger.info(f"Login response: {r.content.decode()}")
+            for i in range(retry):
+                try:
+                    r = self.client.post(self.address + 'login',
+                                         data=data, files=files, allow_redirects=True)
+                    self.logger.info(f"Login response: {r.content.decode()}")
+                    break
+                except:
+                    self.logger.info(f"Retrying login {i}")
         except Exception as e:
             self.logger.error(
                 f"Error logging in: {data}, ip: {self.address + 'login'}")
@@ -79,8 +94,13 @@ class InteractionManager:
         self.logger.info(
             f"Uploading image to profile: {self.email} flag: {image}")
         try:
-            r = self.client.post(
-                self.address + 'profile_' + self.email, files=files)
+            for i in range(retry):
+                try:
+                    r = self.client.post(
+                        self.address + 'profile_' + self.email, files=files)
+                    break
+                except:
+                    self.logger.info(f"Retrying image upload {i}")
         except Exception as e:
             self.logger.error(
                 f"Error uploading image {self.email}, ip: {self.address + 'profile_' + self.email}")
@@ -94,7 +114,13 @@ class InteractionManager:
         imgs = await self.get_profile_image_urls(email)
         for index, e in enumerate(imgs):
             try:
-                r = self.client.get(self.address + e)
+                for i in range(retry):
+                    try:
+                        r = self.client.get(self.address + e)
+                        break
+                    except:
+                        self.logger.info(f"Retrying image download {i}")
+
             except Exception as e:
                 self.logger.error(
                     f"Error downloading image {e}, ip: {self.address + e}")
@@ -108,8 +134,14 @@ class InteractionManager:
         self.logger.info(
             f"Downloading profile of {email}, url: {self.address + 'profile_' + email}")
         try:
-            r = self.client.get(self.address + 'profile_' +
-                                email, allow_redirects=True)
+            for i in range(retry):
+                try:
+                    r = self.client.get(self.address + 'profile_' +
+                                        email, allow_redirects=True)
+                    break
+                except:
+                    self.logger.info(f"Retrying profile download {i}")
+
         except Exception as e:
             self.logger.error(
                 f"Error downloading profile {email}, ip: {self.address + 'profile_' + email}")
@@ -131,17 +163,27 @@ class InteractionManager:
         file = {'private_key': self.key}
         self.logger.info(f"Exporting image {url} with {data}")
         try:
-            r = self.client.post(self.address + 'export_' +
-                                 pure_img, data=data, files=file)
-            self.logger.info(f"Export post response: {r.content}")
+            for i in range(retry):
+                try:
+                    r = self.client.post(self.address + 'export_' +
+                                         pure_img, data=data, files=file)
+                    self.logger.info(f"Export post response: {r.content}")
+                    break
+                except:
+                    self.logger.info(f"Retrying export {i}")
         except Exception as e:
             self.logger.error(
                 f"Error exporting image {url}, ip: {self.address + 'export'}")
             raise MumbleException("Error exporting image")
 
         try:
-            r = self.client.get(self.address + '/download_image')
-            self.logger.info(f"Exported image response: {r.content}")
+            for i in range(retry):
+                try:
+                    r = self.client.get(self.address + '/download_image')
+                    self.logger.info(f"Exported image response: {r.content}")
+                    break
+                except:
+                    self.logger.info(f"Retrying download {i}")
         except:
             raise MumbleException("Error downloading exported image")
 
