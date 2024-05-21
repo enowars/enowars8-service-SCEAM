@@ -66,5 +66,5 @@ async def export(path):
 async def download_image():
     path = session.pop('img_path', None)
     if path is None:
-        return
+        return redirect(url_for('user_profile.profile', email=current_user.email))
     return send_from_directory(current_app.config['FULL_IMAGE_UPLOADS'], path)

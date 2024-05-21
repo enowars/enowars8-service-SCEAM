@@ -6,6 +6,7 @@ from PIL import Image
 import io
 from logging import LoggerAdapter
 from enochecker3 import MumbleException
+from requests import Session
 
 success_login = "Logged in successfully!"
 
@@ -27,7 +28,7 @@ class InteractionManager:
             self.email, self.name, self.key = ("", "", "")
         self.forced_name = forced_name
         self.address = address
-        self.client = AsyncClient()
+        self.client = Session()
 
     async def register(self, vendor_lock: bool = False, low_quality: bool = False):
         self.name = generate_random_string(
@@ -42,13 +43,13 @@ class InteractionManager:
 
         self.logger.info(f"Registering with {data}")
         try:
-            r = await self.client.post(self.address + 'sign-up', data=data)
+            r = self.client.post(self.address + 'sign-up', data=data)
         except Exception as e:
             self.logger.error(
                 f"Error registering: {data} ip: {self.address + 'sign-up'}")
             raise MumbleException("Error registering")
         try:
-            r = await self.client.post(self.address + 'download_key')
+            r = self.client.post(self.address + 'download_key')
         except Exception as e:
             self.logger.error(
                 f"Error downloading key {data}, ip: {self.address + 'download_key'}")
@@ -62,7 +63,8 @@ class InteractionManager:
         files = {'file': self.key}
         self.logger.info(f"Logging in with {data} and {files}")
         try:
-            r = await self.client.post(self.address + 'login', data=data, files=files, follow_redirects=True)
+            r = self.client.post(self.address + 'login',
+                                 data=data, files=files, allow_redirects=True)
             self.logger.info(f"Login response: {r.content.decode()}")
         except Exception as e:
             self.logger.error(
@@ -77,7 +79,8 @@ class InteractionManager:
         self.logger.info(
             f"Uploading image to profile: {self.email} flag: {image}")
         try:
-            r = await self.client.post(self.address + 'profile_' + self.email, files=files)
+            r = self.client.post(
+                self.address + 'profile_' + self.email, files=files)
         except Exception as e:
             self.logger.error(
                 f"Error uploading image {self.email}, ip: {self.address + 'profile_' + self.email}")
@@ -91,7 +94,7 @@ class InteractionManager:
         imgs = await self.get_profile_image_urls(email)
         for index, e in enumerate(imgs):
             try:
-                r = await self.client.get(self.address + e)
+                r = self.client.get(self.address + e)
             except Exception as e:
                 self.logger.error(
                     f"Error downloading image {e}, ip: {self.address + e}")
@@ -105,7 +108,8 @@ class InteractionManager:
         self.logger.info(
             f"Downloading profile of {email}, url: {self.address + 'profile_' + email}")
         try:
-            r = await self.client.get(self.address + 'profile_' + email, follow_redirects=True)
+            r = self.client.get(self.address + 'profile_' +
+                                email, allow_redirects=True)
         except Exception as e:
             self.logger.error(
                 f"Error downloading profile {email}, ip: {self.address + 'profile_' + email}")
@@ -127,7 +131,8 @@ class InteractionManager:
         file = {'private_key': self.key}
         self.logger.info(f"Exporting image {url} with {data}")
         try:
-            r = await self.client.post(self.address + 'export_' + pure_img, data=data, files=file)
+            r = self.client.post(self.address + 'export_' +
+                                 pure_img, data=data, files=file)
             self.logger.info(f"Export post response: {r.content}")
         except Exception as e:
             self.logger.error(
@@ -135,7 +140,7 @@ class InteractionManager:
             raise MumbleException("Error exporting image")
 
         try:
-            r = await self.client.get(self.address + '/download_image')
+            r = self.client.get(self.address + '/download_image')
             self.logger.info(f"Exported image response: {r.content}")
         except:
             raise MumbleException("Error downloading exported image")
