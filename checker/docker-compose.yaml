@@ -1,11 +1,9 @@
-version: "2.1"
-
 services:
   enoft-checker:
     build: .
     # The checker runs an HTTP interface, so we need to map port 5008 to the outside (port 8000).
     ports:
-      - 18008:18008
+      - "18008:18008"
     environment:
       - MONGO_ENABLED=1
       - MONGO_HOST=enoft-mongo
