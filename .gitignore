@@ -161,4 +161,4 @@ cython_debug/
 #.idea/
 
 
-checker3/data
+checker/data
