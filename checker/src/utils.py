@@ -63,7 +63,7 @@ class InteractionManager:
                     self.logger.info(f"Retrying registration {i}")
         except Exception as e:
             self.logger.error(
-                f"Error registering: {data} ip: {self.address + 'sign-up'}")
+                f"Error registering: {data} ip: {self.address + 'sign-up'}, error: {e}")
             raise MumbleException("Error registering")
         try:
             for i in range(retry):
@@ -74,7 +74,7 @@ class InteractionManager:
                     self.logger.info(f"Retrying key download {i}")
         except Exception as e:
             self.logger.error(
-                f"Error downloading key {data}, ip: {self.address + 'download_key'}")
+                f"Error downloading key {data}, ip: {self.address + 'download_key'}, error: {e}")
             raise MumbleException("Error downloading key")
         self.key = r.content
         self.logger.info(f"Registration Key: {r.content}")
@@ -98,7 +98,7 @@ class InteractionManager:
                     self.logger.info(f"Retrying login {i}")
         except Exception as e:
             self.logger.error(
-                f"Error logging in: {data}, ip: {self.address + 'login'}")
+                f"Error logging in: {data}, ip: {self.address + 'login'}, error: {e}")
             if success_login not in r.content.decode():
                 raise MumbleException("Error logging in, invalid credentials")
             raise MumbleException("Error logging in response invalid")
@@ -118,7 +118,7 @@ class InteractionManager:
                     self.logger.info(f"Retrying image upload {i}")
         except Exception as e:
             self.logger.error(
-                f"Error uploading image {self.email}, ip: {self.address + 'profile_' + self.email}")
+                f"Error uploading image {self.email}, ip: {self.address + 'profile_' + self.email}, error: {e}")
             raise MumbleException("Error uploading image")
         return r
 
@@ -138,7 +138,7 @@ class InteractionManager:
 
             except Exception as e:
                 self.logger.error(
-                    f"Error downloading image {e}, ip: {self.address + e}")
+                    f"Error downloading image {e}, ip: {self.address}, error: {e}")
                 raise MumbleException("Error downloading image")
             imgs[index] = Image.open(io.BytesIO(r.content))
         self.logger.info(f"Images decoded {imgs}")
@@ -159,7 +159,7 @@ class InteractionManager:
 
         except Exception as e:
             self.logger.error(
-                f"Error downloading profile {email}, ip: {self.address + 'profile_' + email}")
+                f"Error downloading profile {email}, ip: {self.address + 'profile_' + email}, error: {e}")
             raise MumbleException("Error downloading profile")
         self.logger.info(f"Profile downloaded: {r.content.decode()}")
         soup = BeautifulSoup(r.content.decode(), 'html.parser')
@@ -191,7 +191,7 @@ class InteractionManager:
                     self.logger.info(f"Retrying export {i}")
         except Exception as e:
             self.logger.error(
-                f"Error exporting image {url}, ip: {self.address + 'export'}")
+                f"Error exporting image {url}, ip: {self.address + 'export'} , error: {e}")
             raise MumbleException("Error exporting image")
 
         try:
@@ -206,7 +206,7 @@ class InteractionManager:
             raise MumbleException("Error downloading exported image")
 
         try:
-            img = Image.open(io.BytesIO(r.content))
+            Image.open(io.BytesIO(r.content))
         except BaseException:
             raise MumbleException("Error decoding exported image")
 
@@ -218,7 +218,7 @@ class InteractionManager:
         return {'email': self.email, 'name': self.name, 'key': self.key}
 
     async def get_home_page(self):
-        self.logger.info(f"Getting home page")
+        self.logger.info("Getting home page")
         try:
             for i in range(retry):
                 try:
@@ -228,6 +228,6 @@ class InteractionManager:
                     self.logger.info(f"Retrying home page {i}")
         except Exception as e:
             self.logger.error(
-                f"Error getting home page {self.address}")
+                f"Error getting home page {self.address} , error: {e}")
             raise MumbleException("Error getting home page")
         return r.content

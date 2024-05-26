@@ -4,8 +4,6 @@ import random
 import io
 from pyzbar.pyzbar import decode
 from PIL import Image
-from logging import LoggerAdapter
-from enochecker3 import MumbleException
 
 # TODO Logging
 

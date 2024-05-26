@@ -1,5 +1,5 @@
-from flask import request, flash
-from . import db, logger
+from flask import request
+from . import logger
 from .models import ENOFT, User
 import base64
 import cryptography
@@ -75,7 +75,7 @@ def run():
                 res['private_key'] = request.files['private_key'].read()
                 res['encryption_algorithm'] = request.form['encryption_algorithm']
                 print(res['encryption_algorithm'])
-            except Exception as e:
+            except BaseException:
                 res['error'] = "Invalid Request"
                 return res
 

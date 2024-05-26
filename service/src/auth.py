@@ -1,7 +1,6 @@
 from email.utils import parseaddr
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session, send_file, Response
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, Response
 from .models import User
-from werkzeug.security import generate_password_hash, check_password_hash
 from . import db, logger  # means from __init__.py import db
 from flask_login import login_user, login_required, logout_user, current_user
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -9,7 +8,6 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from io import BytesIO
 
 
 auth = Blueprint('auth', __name__)
@@ -104,7 +102,7 @@ async def sign_up():
 
         if user:
             flash('Email already exists.', category='error')
-            logger.error(f"Invalid")
+            logger.error("Invalid")
         elif parseaddr(email)[1] == '':
             flash('Email is invalid', category='error')
         elif len(name) < 2:

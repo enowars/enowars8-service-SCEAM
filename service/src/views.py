@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, redirect, flash, url_for, session
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, redirect, flash, url_for
+from flask_login import current_user
 # from .models import Note
-from . import db, logger
+from . import logger
 from .models import ENOFT
 
 

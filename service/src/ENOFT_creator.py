@@ -1,7 +1,7 @@
 from flask import request, flash, current_app
 from cryptography.hazmat.primitives import hashes, serialization
 from flask_login import current_user
-from . import db, logger
+from . import db
 from .models import ENOFT
 from PIL import Image
 import random
@@ -59,7 +59,7 @@ class ENOFT_creator:
             img = Image.open(self.file)
             img.verify()
             self.img = Image.open(self.file)
-        except Exception as e:
+        except BaseException:
             flash('Invalid image', 'error')
             self.valid = False
 
