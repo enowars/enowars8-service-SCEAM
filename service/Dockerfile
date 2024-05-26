@@ -1,5 +1,5 @@
 # Use a suitable base-image.
-FROM python:3.10.9-slim
+FROM python:3.12.2-slim
 
 # Create a seperate user and chown new directories if necessary
 # RUN addgroup --system service
