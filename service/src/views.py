@@ -33,4 +33,8 @@ async def page(number):
     # get images
     images = all_images[(number - 1) * 10:number * 10]
 
-    return render_template("home.html", user=current_user, images=images, page=number)
+    return render_template(
+        "home.html",
+        user=current_user,
+        images=images,
+        page=number)

@@ -30,14 +30,28 @@ class UserInputParser():
 
     def handle_hmac_hash(self):
         next_bracket = self.user_input.index(')')
-        input = self.user_input[11:next_bracket-1]
+        input = self.user_input[11:next_bracket - 1]
         if input.startswith('hashes.'):
             input = input[7:]
         else:
             raise Exception("Invalid Syntax")
 
-        hash_alg = ['MD5', 'SHA1', 'SHA224', 'SHA256', 'SHA384', 'SHA3_224', 'SHA3_256', 'SHA3_384',
-                    'SHA3_512', 'SHA512', 'SHA512_224', 'SHA512_256', 'SHAKE128', 'SHAKE256', 'SM3']
+        hash_alg = [
+            'MD5',
+            'SHA1',
+            'SHA224',
+            'SHA256',
+            'SHA384',
+            'SHA3_224',
+            'SHA3_256',
+            'SHA3_384',
+            'SHA3_512',
+            'SHA512',
+            'SHA512_224',
+            'SHA512_256',
+            'SHAKE128',
+            'SHAKE256',
+            'SM3']
         if input in hash_alg:
             self.builder = self.builder.hmac_hash(getattr(hashes, input)())
         else:
@@ -51,7 +65,7 @@ class UserInputParser():
         number = input[:next_bracket]
         try:
             number = int(number)
-        except:
+        except BaseException:
             raise Exception("Invalid kdf rounds")
 
         self.builder = self.builder.kdf_rounds(number)

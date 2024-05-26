@@ -12,11 +12,20 @@ retry = 5
 
 
 def generate_random_string(length):
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+    return ''.join(
+        random.choices(
+            string.ascii_letters +
+            string.digits,
+            k=length))
 
 
 class InteractionManager:
-    def __init__(self, address: str, logger: LoggerAdapter, forced_name: str = None, email_name_key: dict = None) -> None:
+    def __init__(
+            self,
+            address: str,
+            logger: LoggerAdapter,
+            forced_name: str = None,
+            email_name_key: dict = None) -> None:
         self.logger = logger
         self.logger.info(f"Creating InteractionManager with {address}")
         if email_name_key:
@@ -30,7 +39,10 @@ class InteractionManager:
         self.address = address
         self.client = Session()
 
-    async def register(self, vendor_lock: bool = False, low_quality: bool = False):
+    async def register(
+            self,
+            vendor_lock: bool = False,
+            low_quality: bool = False):
         self.name = generate_random_string(
             10) if not self.forced_name else self.forced_name
         self.email = self.name + "@" + generate_random_string(10) + ".scam"
@@ -47,7 +59,7 @@ class InteractionManager:
                 try:
                     r = self.client.post(self.address + 'sign-up', data=data)
                     break
-                except:
+                except BaseException:
                     self.logger.info(f"Retrying registration {i}")
         except Exception as e:
             self.logger.error(
@@ -58,7 +70,7 @@ class InteractionManager:
                 try:
                     r = self.client.post(self.address + 'download_key')
                     break
-                except:
+                except BaseException:
                     self.logger.info(f"Retrying key download {i}")
         except Exception as e:
             self.logger.error(
@@ -75,11 +87,14 @@ class InteractionManager:
         try:
             for i in range(retry):
                 try:
-                    r = self.client.post(self.address + 'login',
-                                         data=data, files=files, allow_redirects=True)
+                    r = self.client.post(
+                        self.address + 'login',
+                        data=data,
+                        files=files,
+                        allow_redirects=True)
                     self.logger.info(f"Login response: {r.content.decode()}")
                     break
-                except:
+                except BaseException:
                     self.logger.info(f"Retrying login {i}")
         except Exception as e:
             self.logger.error(
@@ -99,7 +114,7 @@ class InteractionManager:
                     r = self.client.post(
                         self.address + 'profile_' + self.email, files=files)
                     break
-                except:
+                except BaseException:
                     self.logger.info(f"Retrying image upload {i}")
         except Exception as e:
             self.logger.error(
@@ -118,7 +133,7 @@ class InteractionManager:
                     try:
                         r = self.client.get(self.address + e)
                         break
-                    except:
+                    except BaseException:
                         self.logger.info(f"Retrying image download {i}")
 
             except Exception as e:
@@ -139,7 +154,7 @@ class InteractionManager:
                     r = self.client.get(self.address + 'profile_' +
                                         email, allow_redirects=True)
                     break
-                except:
+                except BaseException:
                     self.logger.info(f"Retrying profile download {i}")
 
         except Exception as e:
@@ -153,7 +168,10 @@ class InteractionManager:
         self.logger.info(f"Found images: {imgs}")
         return imgs
 
-    async def export_image_url(self, url, algorithm=".key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC)"):
+    async def export_image_url(
+            self,
+            url,
+            algorithm=".key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC)"):
         # algorithm = ".kdf_rounds(50000).key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC).hmac_hash(hashes.SHA1())"
         # algorithm = ".key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC)"
         password = generate_random_string(10)
@@ -169,7 +187,7 @@ class InteractionManager:
                                          pure_img, data=data, files=file)
                     self.logger.info(f"Export post response: {r.content}")
                     break
-                except:
+                except BaseException:
                     self.logger.info(f"Retrying export {i}")
         except Exception as e:
             self.logger.error(
@@ -182,14 +200,14 @@ class InteractionManager:
                     r = self.client.get(self.address + '/download_image')
                     self.logger.info(f"Exported image response: {r.content}")
                     break
-                except:
+                except BaseException:
                     self.logger.info(f"Retrying download {i}")
-        except:
+        except BaseException:
             raise MumbleException("Error downloading exported image")
 
         try:
             img = Image.open(io.BytesIO(r.content))
-        except:
+        except BaseException:
             raise MumbleException("Error decoding exported image")
 
         return Image.open(io.BytesIO(r.content))
@@ -198,3 +216,18 @@ class InteractionManager:
         self.logger.info(
             f"Dumping info: {self.email}, {self.name}, {self.key}")
         return {'email': self.email, 'name': self.name, 'key': self.key}
+
+    async def get_home_page(self):
+        self.logger.info(f"Getting home page")
+        try:
+            for i in range(retry):
+                try:
+                    r = self.client.get(self.address)
+                    break
+                except BaseException:
+                    self.logger.info(f"Retrying home page {i}")
+        except Exception as e:
+            self.logger.error(
+                f"Error getting home page {self.address}")
+            raise MumbleException("Error getting home page")
+        return r.content

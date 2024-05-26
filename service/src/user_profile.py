@@ -28,7 +28,12 @@ async def profile(email):
     file_names = [e.image_path for e in enofts]
     name = user.name + " <" + user.email + ">"
 
-    return render_template("profile.html", user=current_user, images=file_names, owned=owned, name=name)
+    return render_template(
+        "profile.html",
+        user=current_user,
+        images=file_names,
+        owned=owned,
+        name=name)
 
 
 @user_profile.route('/uploads/<path:path>', methods=['GET', 'POST'])
@@ -38,9 +43,11 @@ async def uploads(path):
     owned = True if session_email == owner_email else False
     force_lossy = User.query.filter_by(email=owner_email).first().never_full
     if not owned or force_lossy:
-        return send_from_directory(current_app.config['LOSSY_IMAGE_UPLOADS'], path)
+        return send_from_directory(
+            current_app.config['LOSSY_IMAGE_UPLOADS'], path)
     else:
-        return send_from_directory(current_app.config['FULL_IMAGE_UPLOADS'], path)
+        return send_from_directory(
+            current_app.config['FULL_IMAGE_UPLOADS'], path)
 
 
 @user_profile.route('/export_<path:path>', methods=['GET', 'POST'])
@@ -54,11 +61,17 @@ async def export(path):
         res = ENOFT_export()
         if res['error'] != '':
             flash('Error during export: ' + res['error'], 'error')
-            return redirect(url_for('user_profile.profile', email=current_user.email))
+            return redirect(
+                url_for(
+                    'user_profile.profile',
+                    email=current_user.email))
 
         session['img_path'] = path
         print(res['data'])
-        return render_template("show_serialization.html", user=current_user, certificate=res['data'])
+        return render_template(
+            "show_serialization.html",
+            user=current_user,
+            certificate=res['data'])
 
 
 @user_profile.route('/download_image', methods=['GET', 'POST'])
@@ -66,5 +79,8 @@ async def export(path):
 async def download_image():
     path = session.pop('img_path', None)
     if path is None:
-        return redirect(url_for('user_profile.profile', email=current_user.email))
+        return redirect(
+            url_for(
+                'user_profile.profile',
+                email=current_user.email))
     return send_from_directory(current_app.config['FULL_IMAGE_UPLOADS'], path)

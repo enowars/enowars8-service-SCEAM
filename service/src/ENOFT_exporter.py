@@ -45,7 +45,9 @@ def get_serialized(response):
 
 def get_encryption_algorithm(response):
     try:
-        return UserInputParser(response['password'], response['encryption_algorithm']).run()
+        return UserInputParser(
+            response['password'],
+            response['encryption_algorithm']).run()
     except Exception as e:
         print(e)
         logger.error(e)

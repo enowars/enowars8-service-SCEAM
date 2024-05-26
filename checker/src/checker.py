@@ -7,9 +7,13 @@ from enochecker3 import (
     MumbleException,
     PutflagCheckerTaskMessage,
     ExploitCheckerTaskMessage,
+    PutnoiseCheckerTaskMessage,
+    GetnoiseCheckerTaskMessage,
+    HavocCheckerTaskMessage
 )
 from typing import Optional
-from utils import InteractionManager
+from utils import InteractionManager, generate_random_string
+from bs4 import BeautifulSoup
 import qr_codes
 
 SERVICE_PORT = 8008
@@ -32,8 +36,6 @@ async def putflag_email(
     await m.upload_image(qrCode)
     data = m.dump_info()
     await db.set("credentials", data)
-    for key in data:
-        await db.set(key, data[key])
 
     return data["email"]
 
@@ -47,7 +49,7 @@ async def getflag_email(
     logger.info("Getting flag")
     try:
         credentials = await db.get("credentials")
-    except:
+    except BaseException:
         raise MumbleException("No credentials saved in db")
     logger.info(f"Got credentials: {credentials}")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
@@ -98,9 +100,6 @@ async def putflag_export(
     await m.upload_image(qrCode)
     data = m.dump_info()
     await db.set("credentials", data)
-    for key in data:
-        await db.set(key, data[key])
-
     return data["email"]
 
 
@@ -113,18 +112,18 @@ async def getflag_export(
     logger.info("Getting flag")
     try:
         credentials = await db.get("credentials")
-    except:
+    except BaseException:
         raise MumbleException("No credentials saved in db")
     logger.info(f"Got credentials: {credentials}")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
     m = InteractionManager(address, logger, email_name_key=credentials)
     try:
         await m.login()
-    except:
+    except BaseException:
         raise MumbleException("Error logging in")
     try:
         imgs = await m.get_profile_image_urls(credentials["email"])
-    except:
+    except BaseException:
         raise MumbleException("Error getting profile")
     if not imgs:
         raise MumbleException("No images found")
@@ -132,7 +131,7 @@ async def getflag_export(
     img_url = imgs[0]
     try:
         img = await m.export_image_url(img_url)
-    except:
+    except BaseException:
         raise MumbleException("Error exporting image")
     if not img:
         logger.error("Image not exported")
@@ -160,7 +159,7 @@ async def exploit_export(
     img_url = urls[0]
     try:
         img = await m.export_image_url(img_url, ".hmac_hash(hashes.SHA1())")
-    except:
+    except BaseException:
         raise MumbleException("Error exporting image")
     if not img:
         logger.error("Image not exported")
@@ -168,6 +167,134 @@ async def exploit_export(
     flag = qr_codes.read_qr_code(img)
     logger.info(f"Decoded image: {flag}")
     return flag
+
+
+@checker.putnoise(0)
+async def putnoise_0(
+    task: PutnoiseCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter
+):
+    random_string = generate_random_string(20)
+    await db.set("random_string", random_string)
+    logger.info("Putting noise")
+    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
+    m = InteractionManager(address, logger)
+    try:
+        await m.register(vendor_lock=True)
+    except BaseException:
+        raise MumbleException("Error registering")
+
+    try:
+        await m.upload_image(qr_codes.create_qr_code(random_string))
+    except BaseException:
+        raise MumbleException("Error uploading image")
+    logger.info("Noise put")
+    data = m.dump_info()
+    await db.set("credentials", data)
+
+
+@checker.getnoise(0)
+async def getnoise_0(
+    task: GetnoiseCheckerTaskMessage, db: ChainDB, logger: LoggerAdapter
+):
+    logger.info("Getting noise")
+    try:
+        credentials = await db.get("credentials")
+    except BaseException:
+        raise MumbleException("No credentials saved in db")
+    noise = await db.get("random_string")
+    logger.info(f"Got credentials: {credentials}")
+    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
+    m = InteractionManager(address, logger, email_name_key=credentials)
+    try:
+        await m.login()
+    except BaseException:
+        raise MumbleException("Error logging in")
+    try:
+        imgs = await m.download_profile_images_from_self()
+    except BaseException:
+        raise MumbleException("Error getting profile")
+    if not imgs:
+        raise MumbleException("No images found")
+    logger.info(f"Downloaded {len(imgs)} images")
+    imgs = [qr_codes.read_qr_code(img) for img in imgs]
+    logger.info(f"Decoded images: {imgs}")
+    assert_in(noise, imgs, "Noise not found in images")
+
+
+@checker.putnoise(1)
+async def putnoise_1(
+    task: PutnoiseCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter
+):
+    random_string = generate_random_string(20)
+    await db.set("random_string", random_string)
+    logger.info("Putting noise")
+    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
+    m = InteractionManager(address, logger)
+    try:
+        await m.register(low_quality=True)
+    except BaseException:
+        raise MumbleException("Error registering")
+
+    try:
+        await m.upload_image(qr_codes.create_qr_code(random_string))
+    except BaseException:
+        raise MumbleException("Error uploading image")
+    logger.info("Noise put")
+    data = m.dump_info()
+    await db.set("credentials", data)
+
+
+@checker.getnoise(1)
+async def getnoise_1(
+    task: GetnoiseCheckerTaskMessage, db: ChainDB, logger: LoggerAdapter
+):
+    logger.info("Getting noise")
+    try:
+        credentials = await db.get("credentials")
+    except BaseException:
+        raise MumbleException("No credentials saved in db")
+    noise = await db.get("random_string")
+    logger.info(f"Got credentials: {credentials}")
+    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
+    m = InteractionManager(address, logger, email_name_key=credentials)
+    try:
+        await m.login()
+    except BaseException:
+        raise MumbleException("Error logging in")
+    try:
+        imgs = await m.get_profile_image_urls(credentials["email"])
+    except BaseException:
+        raise MumbleException("Error getting profile")
+    if not imgs:
+        raise MumbleException("No images found")
+    logger.info(f"Got {len(imgs)} images")
+    img_url = imgs[0]
+    try:
+        img = await m.export_image_url(img_url)
+    except BaseException:
+        raise MumbleException("Error exporting image")
+    if not img:
+        logger.error("Image not exported")
+        raise MumbleException("No images found")
+    flag = qr_codes.read_qr_code(img)
+    logger.info(f"Decoded image: {flag}")
+    assert_equals(noise, flag, "Noise not found in image")
+
+
+@checker.havoc(0)
+async def havoc_0(task: HavocCheckerTaskMessage, logger: LoggerAdapter):
+    logger.info("Havoc")
+    m = InteractionManager("http://" + task.address +
+                           ":" + str(SERVICE_PORT) + "/", logger)
+    main = await m.get_home_page()
+    soup = BeautifulSoup(main, "html.parser")
+    nav = soup.find_all("nav")
+    if not nav or len(nav) == 0:
+        raise MumbleException("No nav found")
 
 
 if __name__ == "__main__":

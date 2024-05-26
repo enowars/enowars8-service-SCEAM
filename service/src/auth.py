@@ -27,8 +27,8 @@ async def login():
         email = request.form.get('email')
         private_key = request.form.get('private_key')
         if 'file' not in request.files:
-            flash("request.files: "+str(request.files), 'error')
-            flash("request.form: "+str(request.form), 'error')
+            flash("request.files: " + str(request.files), 'error')
+            flash("request.form: " + str(request.form), 'error')
 
             print(request.files)
             flash('No file part', 'error')
@@ -41,14 +41,16 @@ async def login():
         flash(e, category='error')
         return login_error_handler("Invalid form submission.")
     user = User.query.filter_by(email=email).first()
-    if user == None:
+    if user is None:
         return login_error_handler(f"User with email {email} does not exist.")
 
     if user.name != name:
-        return login_error_handler(f"User {user.name} with email {email} does not have name {name}.")
+        return login_error_handler(
+            f"User {user.name} with email {email} does not have name {name}.")
 
     if not valid_keys(private_key, user):
-        return login_error_handler(f"Private key does not match public key for user with email {email}.")
+        return login_error_handler(
+            f"Private key does not match public key for user with email {email}.")
 
     login_user(user, remember=True)
     set_session_name(user)
@@ -59,8 +61,13 @@ async def login():
 def valid_keys(private_key, user):
     example_message = b"example message to be encrypted"
     public_key = serialization.load_pem_public_key(user.public_key.encode())
-    encrypted = public_key.encrypt(example_message, padding.OAEP(
-        mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
+    encrypted = public_key.encrypt(
+        example_message,
+        padding.OAEP(
+            mgf=padding.MGF1(
+                algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None))
     decrypted = private_key.decrypt(encrypted, padding.OAEP(mgf=padding.MGF1(
         algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
     return decrypted == example_message
@@ -68,7 +75,7 @@ def valid_keys(private_key, user):
 
 def login_error_handler(msg):
     errorString = "Credentials do not match."
-    logger.info("LOGIN: "+msg)
+    logger.info("LOGIN: " + msg)
     flash(errorString, category='error')
     return render_template("login.html", user=current_user)
 
@@ -103,8 +110,12 @@ async def sign_up():
         elif len(name) < 2:
             flash('Name must be greater than 1 character.', category='error')
         else:
-            new_user = User(email=email, name=name,
-                            public_key=public_key, never_full=never_full, vendor_lock=vendor_lock)
+            new_user = User(
+                email=email,
+                name=name,
+                public_key=public_key,
+                never_full=never_full,
+                vendor_lock=vendor_lock)
             db.session.add(new_user)
             db.session.commit()
             login_user(new_user, remember=True)
@@ -142,7 +153,10 @@ async def keyShowcase():
     private_key = session.get('private_key', None)
     if private_key is None:
         return redirect(url_for('views.home'))
-    return render_template("key_show.html", private_key=private_key, user=current_user)
+    return render_template(
+        "key_show.html",
+        private_key=private_key,
+        user=current_user)
 
 
 @auth.route('/download_key', methods=['POST', 'GET'])
