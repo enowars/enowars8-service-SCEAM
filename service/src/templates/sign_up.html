@@ -1,46 +1,70 @@
 {% extends "base.html" %} {% block title %}Sign Up{% endblock %} {% block
 content %}
-<form method="POST">
-  <h3 align="center">Sign Up</h3>
-  <div class="form-group">
-    <label for="email">Email Address</label>
-    <input
-      type="email"
-      class="form-control"
-      id="email"
-      name="email"
-      placeholder="Enter email"
-    />
+<div class="login-wrapper">
+  <div class="content_container">
+    <form method="POST" style="margin: 20px">
+      <h1 align="center">Sign Up</h1>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          class="form-control"
+          id="email"
+          name="email"
+          placeholder="Enter email"
+        />
+      </div>
+      <div class="form-group">
+        <label for="firstName">Name</label>
+        <input
+          type="text"
+          class="form-control"
+          id="name"
+          name="name"
+          placeholder="Enter name"
+        />
+      </div>
+      <div style="width: 100%">
+        <div
+          class="form-group"
+          style="
+            float: left;
+            width: 50%;
+            text-align: center;
+            justify-content: center;
+          "
+        >
+          <label for="never_full">Cheap Image Hosting</label>
+          <div class="center-div-content">
+            <input
+              type="checkbox"
+              class="form-control"
+              id="never_full"
+              name="never_full"
+            />
+          </div>
+        </div>
+        <div
+          class="form-group"
+          style="float: left; width: 50%; text-align: center"
+        >
+          <label for="vendor_lock">Vendor Lockin</label>
+          <div class="center-div-content">
+            <input
+              type="checkbox"
+              class="form-control"
+              id="vendor_lock"
+              name="vendor_lock"
+            />
+          </div>
+        </div>
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary form-button">
+          Submit
+        </button>
+      </div>
+    </form>
   </div>
-  <div class="form-group">
-    <label for="firstName">Name</label>
-    <input
-      type="text"
-      class="form-control"
-      id="name"
-      name="name"
-      placeholder="Enter name"
-    />
-  </div>
-  <div class="form-group">
-    <label for="never_full">Cheap Image Hosting</label>
-    <input
-      type="checkbox"
-      class="form-control"
-      id="never_full"
-      name="never_full"
-    />
-  </div>
-  <div class="form-group">
-    <label for="vendor_lock">Vendor Lockin</label>
-    <input
-      type="checkbox"
-      class="form-control"
-      id="vendor_lock"
-      name="vendor_lock"
-    />
-  </div>
-  <br />
-  <button type="submit" class="btn btn-primary">Submit</button>
-</form>
+</div>
 {% endblock %}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html data-bs-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -25,30 +25,37 @@
   <body>
     <div class="nav_bar">
       <div class="logo_container">
-        <img
-          src="{{ url_for('static',filename='logo.png') }}"
-          width="100"
-          height="100"
-        />
+        <a href="/">
+          <img src="{{ url_for('static',filename='logo.png') }}" height="100" />
+        </a>
       </div>
 
       <div class="supernav_container">
-        <a class="menuitem" href="TODO"> HOME </a>
-        <a class="menuitem" href="TODO"> PROFILE </a>
+        <a class="menuitem" href="/"> HOME </a>
+        {% if user.is_authenticated %}
+        <a class="menuitem" href="/profile_{{user.email}}"> PROFILE </a>
+        <a class="menuitem" href="/logout"> LOGOUT </a>
+        {% else %}
+        <a class="menuitem disabled" href="/"> PROFILE </a>
+        {% endif %}
       </div>
 
       <div id="global_actions">
         <a
           class="header_installsteam_btn header_installsteam_btn_green"
-          href="TODO"
+          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         >
           <div class="header_installsteam_btn_content">Install Sceam</div>
         </a>
-        &nbsp;
-        <a class="global_action_link" href="TODO">login</a>
+        {% if user.is_authenticated %} &nbsp;
+        <a class="global_action_link disabled" href="/login">login</a>
         &nbsp;|&nbsp;
-        <a class="global_action_link" href="TODO">Register</a>
-        &nbsp; &nbsp;
+        <a class="global_action_link disabled" href="/sign-up">Register</a>
+        &nbsp; &nbsp; {% else %} &nbsp;
+        <a class="global_action_link" href="/login">login</a>
+        &nbsp;|&nbsp;
+        <a class="global_action_link" href="/sign-up">Register</a>
+        &nbsp; &nbsp; {% endif %}
       </div>
     </div>
 
@@ -72,7 +79,7 @@
       {% endif %} {% endfor %} {% endif %} {% endwith %}
     </div>
 
-    <div class="container">{% block content %} {% endblock %}</div>
+    {% block content %} {% endblock %}
     <script
       src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
       integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
