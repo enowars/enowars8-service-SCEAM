@@ -292,9 +292,13 @@ async def havoc_0(task: HavocCheckerTaskMessage, logger: LoggerAdapter):
                            ":" + str(SERVICE_PORT) + "/", logger)
     main = await m.get_home_page()
     soup = BeautifulSoup(main, "html.parser")
-    nav = soup.find_all("nav")
-    if not nav or len(nav) == 0:
-        raise MumbleException("No nav found")
+    imgs = soup.find_all("img")
+    imgs = [img["src"] for img in imgs]
+    if not imgs:
+        raise MumbleException("No images found")
+    logger.info(f"Found images: {imgs}")
+    if "/static/logo.png" not in imgs:
+        raise MumbleException("Logo not found")
 
 
 if __name__ == "__main__":

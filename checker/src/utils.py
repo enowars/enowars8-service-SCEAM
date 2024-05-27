@@ -165,6 +165,7 @@ class InteractionManager:
         soup = BeautifulSoup(r.content.decode(), 'html.parser')
         imgs = soup.find_all('img')
         imgs = [img['src'] for img in imgs]
+        imgs = [img for img in imgs if 'uploads/' in img]
         self.logger.info(f"Found images: {imgs}")
         return imgs
 

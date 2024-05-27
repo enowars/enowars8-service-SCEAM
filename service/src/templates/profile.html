@@ -11,7 +11,16 @@ content %}
     method="POST"
     enctype="multipart/form-data"
   >
-    <input type="file" name="file" />
+    <div class="center-div-content">
+      <label for="file">Upload NFT</label>
+      <div class="custom-file-upload">
+        <img
+          src="{{ url_for('static',filename='upload-white.svg') }}"
+          width="100"
+        />
+        <input type="file" class="form-control" id="file" name="file" />
+      </div>
+    </div>
     <input type="submit" class="btn btn-primary" />
   </form>
 </div>
