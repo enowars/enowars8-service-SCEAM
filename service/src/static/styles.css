@@ -136,7 +136,7 @@ input[type=checkbox]:focus {
 
 input[type=text]:focus, input[type=password]:focus, input[type=email]:focus {
     border-width: 3px;
-    color: var(--input-selected-color);
+    color: var(--default-text-color);
     background-color: var(--input-selected-color);
 }
 
