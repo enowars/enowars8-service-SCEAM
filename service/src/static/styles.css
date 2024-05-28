@@ -82,6 +82,12 @@ h1 {
     color: var(--default-text-color);
 }
 
+h3 {
+    font-family: "Motiva Sans", "Twemoji", "Noto Sans", Helvetica, sans-serif;
+    padding-top: 10px;
+    color: var(--default-text-color);
+}
+
 input[type="file"] {
     position: absolute;
     font-size: 50px;
