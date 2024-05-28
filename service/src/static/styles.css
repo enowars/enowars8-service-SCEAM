@@ -253,3 +253,16 @@ label {
     --nav-bar-color: #222b37;
     --highlight-blue: #1999ff;
 }
+
+.list-group {
+    width: 100%;
+    flex-direction: column;
+}
+
+.list-group-item {
+    display: block;
+    padding: 20px 15px;
+    margin: 20px 0;
+    max-width: 50%;
+    min-width: 50%;
+}
