@@ -8,7 +8,7 @@ from enochecker3 import MumbleException
 from requests import Session
 
 success_login = "Logged in successfully!"
-retry = 3
+retry = 5
 
 
 def generate_random_string(length):
