@@ -31,9 +31,14 @@ async def putflag_email(
     qrCode = qr_codes.create_qr_code(flag)
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
     m = InteractionManager(address, logger)
-
-    await m.register(vendor_lock=True)
-    await m.upload_image(qrCode)
+    try:
+        await m.register(vendor_lock=True)
+    except:
+        raise MumbleException("Error registering")
+    try:
+        await m.upload_image(qrCode)
+    except:
+        raise MumbleException("Error depositing flag")
     data = m.dump_info()
     await db.set("credentials", data)
 
@@ -49,13 +54,19 @@ async def getflag_email(
     logger.info("Getting flag")
     try:
         credentials = await db.get("credentials")
-    except BaseException:
+    except:
         raise MumbleException("No credentials saved in db")
     logger.info(f"Got credentials: {credentials}")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
     m = InteractionManager(address, logger, email_name_key=credentials)
-    await m.login()
-    imgs = await m.download_profile_images_from_self()
+    try:
+        await m.login()
+    except:
+        raise MumbleException("Error logging in")
+    try:
+        imgs = await m.download_profile_images_from_self()
+    except:
+        raise MumbleException("Error getting profile")
     if not imgs:
         raise MumbleException("No images found")
     logger.info(f"Downloaded {len(imgs)} images")
@@ -75,8 +86,14 @@ async def exploit_email(
     name = email + "("
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
     m = InteractionManager(address, logger, forced_name=name)
-    await m.register()
-    imgs = await m.download_profile_images_from_email(email)
+    try:
+        await m.register()
+    except:
+        raise MumbleException("Error registering")
+    try:
+        imgs = await m.download_profile_images_from_email(email)
+    except:
+        raise MumbleException("Error getting profile")
     if not imgs:
         raise MumbleException("No images found")
     logger.info(f"Downloaded {len(imgs)} images")
@@ -95,9 +112,15 @@ async def putflag_export(
     qrCode = qr_codes.create_qr_code(flag)
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
     m = InteractionManager(address, logger)
+    try:
+        await m.register(low_quality=True)
+    except:
+        raise MumbleException("Error registering")
 
-    await m.register(low_quality=True)
-    await m.upload_image(qrCode)
+    try:
+        await m.upload_image(qrCode)
+    except:
+        raise MumbleException("Error depositing flag")
     data = m.dump_info()
     await db.set("credentials", data)
     return data["email"]
@@ -112,18 +135,18 @@ async def getflag_export(
     logger.info("Getting flag")
     try:
         credentials = await db.get("credentials")
-    except BaseException:
+    except:
         raise MumbleException("No credentials saved in db")
     logger.info(f"Got credentials: {credentials}")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
     m = InteractionManager(address, logger, email_name_key=credentials)
     try:
         await m.login()
-    except BaseException:
+    except:
         raise MumbleException("Error logging in")
     try:
         imgs = await m.get_profile_image_urls(credentials["email"])
-    except BaseException:
+    except:
         raise MumbleException("Error getting profile")
     if not imgs:
         raise MumbleException("No images found")
@@ -131,7 +154,7 @@ async def getflag_export(
     img_url = imgs[0]
     try:
         img = await m.export_image_url(img_url)
-    except BaseException:
+    except:
         raise MumbleException("Error exporting image")
     if not img:
         logger.error("Image not exported")
@@ -159,7 +182,7 @@ async def exploit_export(
     img_url = urls[0]
     try:
         img = await m.export_image_url(img_url, ".hmac_hash(hashes.SHA1())")
-    except BaseException:
+    except:
         raise MumbleException("Error exporting image")
     if not img:
         logger.error("Image not exported")
@@ -182,12 +205,12 @@ async def putnoise_0(
     m = InteractionManager(address, logger)
     try:
         await m.register(vendor_lock=True)
-    except BaseException:
+    except:
         raise MumbleException("Error registering")
 
     try:
         await m.upload_image(qr_codes.create_qr_code(random_string))
-    except BaseException:
+    except:
         raise MumbleException("Error uploading image")
     logger.info("Noise put")
     data = m.dump_info()
@@ -201,7 +224,7 @@ async def getnoise_0(
     logger.info("Getting noise")
     try:
         credentials = await db.get("credentials")
-    except BaseException:
+    except:
         raise MumbleException("No credentials saved in db")
     noise = await db.get("random_string")
     logger.info(f"Got credentials: {credentials}")
@@ -209,11 +232,11 @@ async def getnoise_0(
     m = InteractionManager(address, logger, email_name_key=credentials)
     try:
         await m.login()
-    except BaseException:
+    except:
         raise MumbleException("Error logging in")
     try:
         imgs = await m.download_profile_images_from_self()
-    except BaseException:
+    except:
         raise MumbleException("Error getting profile")
     if not imgs:
         raise MumbleException("No images found")
@@ -236,12 +259,12 @@ async def putnoise_1(
     m = InteractionManager(address, logger)
     try:
         await m.register(low_quality=True)
-    except BaseException:
+    except:
         raise MumbleException("Error registering")
 
     try:
         await m.upload_image(qr_codes.create_qr_code(random_string))
-    except BaseException:
+    except:
         raise MumbleException("Error uploading image")
     logger.info("Noise put")
     data = m.dump_info()
@@ -255,7 +278,7 @@ async def getnoise_1(
     logger.info("Getting noise")
     try:
         credentials = await db.get("credentials")
-    except BaseException:
+    except:
         raise MumbleException("No credentials saved in db")
     noise = await db.get("random_string")
     logger.info(f"Got credentials: {credentials}")
@@ -263,11 +286,11 @@ async def getnoise_1(
     m = InteractionManager(address, logger, email_name_key=credentials)
     try:
         await m.login()
-    except BaseException:
+    except:
         raise MumbleException("Error logging in")
     try:
         imgs = await m.get_profile_image_urls(credentials["email"])
-    except BaseException:
+    except:
         raise MumbleException("Error getting profile")
     if not imgs:
         raise MumbleException("No images found")
@@ -275,7 +298,7 @@ async def getnoise_1(
     img_url = imgs[0]
     try:
         img = await m.export_image_url(img_url)
-    except BaseException:
+    except:
         raise MumbleException("Error exporting image")
     if not img:
         logger.error("Image not exported")
@@ -290,7 +313,10 @@ async def havoc_0(task: HavocCheckerTaskMessage, logger: LoggerAdapter):
     logger.info("Havoc")
     m = InteractionManager("http://" + task.address +
                            ":" + str(SERVICE_PORT) + "/", logger)
-    main = await m.get_home_page()
+    try:
+        main = await m.get_home_page()
+    except:
+        raise MumbleException("Service unreachable/invalid")
     soup = BeautifulSoup(main, "html.parser")
     imgs = soup.find_all("img")
     imgs = [img["src"] for img in imgs]

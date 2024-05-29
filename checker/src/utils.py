@@ -8,7 +8,7 @@ from enochecker3 import MumbleException
 from requests import Session
 
 success_login = "Logged in successfully!"
-retry = 5
+retry = 3
 
 
 def generate_random_string(length):
@@ -59,7 +59,7 @@ class InteractionManager:
                 try:
                     r = self.client.post(self.address + 'sign-up', data=data)
                     break
-                except BaseException:
+                except:
                     self.logger.info(f"Retrying registration {i}")
         except Exception as e:
             self.logger.error(
@@ -70,7 +70,7 @@ class InteractionManager:
                 try:
                     r = self.client.post(self.address + 'download_key')
                     break
-                except BaseException:
+                except:
                     self.logger.info(f"Retrying key download {i}")
         except Exception as e:
             self.logger.error(
@@ -94,7 +94,7 @@ class InteractionManager:
                         allow_redirects=True)
                     self.logger.info(f"Login response: {r.content.decode()}")
                     break
-                except BaseException:
+                except:
                     self.logger.info(f"Retrying login {i}")
         except Exception as e:
             self.logger.error(
@@ -114,7 +114,7 @@ class InteractionManager:
                     r = self.client.post(
                         self.address + 'profile_' + self.email, files=files)
                     break
-                except BaseException:
+                except:
                     self.logger.info(f"Retrying image upload {i}")
         except Exception as e:
             self.logger.error(
@@ -133,7 +133,7 @@ class InteractionManager:
                     try:
                         r = self.client.get(self.address + e)
                         break
-                    except BaseException:
+                    except:
                         self.logger.info(f"Retrying image download {i}")
 
             except Exception as e:
@@ -154,7 +154,7 @@ class InteractionManager:
                     r = self.client.get(self.address + 'profile_' +
                                         email, allow_redirects=True)
                     break
-                except BaseException:
+                except:
                     self.logger.info(f"Retrying profile download {i}")
 
         except Exception as e:
@@ -188,7 +188,7 @@ class InteractionManager:
                                          pure_img, data=data, files=file)
                     self.logger.info(f"Export post response: {r.content}")
                     break
-                except BaseException:
+                except:
                     self.logger.info(f"Retrying export {i}")
         except Exception as e:
             self.logger.error(
@@ -201,14 +201,14 @@ class InteractionManager:
                     r = self.client.get(self.address + '/download_image')
                     self.logger.info(f"Exported image response: {r.content}")
                     break
-                except BaseException:
+                except:
                     self.logger.info(f"Retrying download {i}")
-        except BaseException:
+        except:
             raise MumbleException("Error downloading exported image")
 
         try:
             Image.open(io.BytesIO(r.content))
-        except BaseException:
+        except:
             raise MumbleException("Error decoding exported image")
 
         return Image.open(io.BytesIO(r.content))
@@ -225,7 +225,7 @@ class InteractionManager:
                 try:
                     r = self.client.get(self.address)
                     break
-                except BaseException:
+                except:
                     self.logger.info(f"Retrying home page {i}")
         except Exception as e:
             self.logger.error(

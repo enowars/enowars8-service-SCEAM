@@ -59,7 +59,7 @@ class ENOFT_creator:
             img = Image.open(self.file)
             img.verify()
             self.img = Image.open(self.file)
-        except BaseException:
+        except:
             flash('Invalid image', 'error')
             self.valid = False
 

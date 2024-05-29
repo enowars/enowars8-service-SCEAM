@@ -75,7 +75,7 @@ def run():
                 res['private_key'] = request.files['private_key'].read()
                 res['encryption_algorithm'] = request.form['encryption_algorithm']
                 print(res['encryption_algorithm'])
-            except BaseException:
+            except:
                 res['error'] = "Invalid Request"
                 return res
 

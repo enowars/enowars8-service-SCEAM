@@ -64,7 +64,7 @@ class UserInputParser():
         number = input[:next_bracket]
         try:
             number = int(number)
-        except BaseException:
+        except:
             raise Exception("Invalid kdf rounds")
 
         self.builder = self.builder.kdf_rounds(number)
