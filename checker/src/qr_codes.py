@@ -18,15 +18,17 @@ def get_random_background_path() -> str:
 
 # TODO check decodability
 def create_qr_code(flag) -> bytes:
-    scale = 7
+    scale = 6
     qr = segno.make_qr(flag)
     output = io.BytesIO()
     # qr.save(output, kind='png', scale=scale)
     decoded = None
-    while decoded != flag:
+    iters = 0
+    while decoded != flag and iters < 100:
+        iters += 1
         try:
             background = get_random_background_path()
-            qr = qr.to_artistic(
+            qr.to_artistic(
                 background=background,
                 target=output,
                 kind='png',
@@ -39,6 +41,10 @@ def create_qr_code(flag) -> bytes:
             print("Error creating QR code")
             pass
         # print(decoded)
+    if iters == 100:
+        qr.save(output, kind='png', scale=scale)
+        output.seek(0)
+        res = output.getvalue()
     return res
 
 
