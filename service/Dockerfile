@@ -18,6 +18,7 @@ COPY main.py /
 COPY requirements.txt /
 COPY cleanup.py /
 COPY entrypoint.sh /
+RUN chmod +x /entrypoint.sh
 
 # Change the working directory.
 # WORKDIR /service/
