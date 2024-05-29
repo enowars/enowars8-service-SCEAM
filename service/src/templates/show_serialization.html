@@ -1,7 +1,10 @@
 {% extends "base.html" %} {% block title %}REMEMBER THIS{% endblock %} {% block
 content %}
-<h1 align="center">Serialized ENOFT</h1>
-<img src="/download_image" alt="image" style="max-width: 50%" />
 
-<div class="form">{{certificate}}</div>
+<div class="center-div-content">
+  <h1 align="center">Serialized ENOFT</h1>
+  <img src="/download_image" alt="image" style="max-width: 50%" />
+  <div style="word-wrap: break-word; width: 80%">{{certificate}}</div>
+</div>
+
 {% endblock %}
