@@ -18,20 +18,28 @@ def get_random_background_path() -> str:
 
 # TODO check decodability
 def create_qr_code(flag) -> bytes:
-    scale = 3
+    scale = 10
     qr = segno.make_qr(flag)
     output = io.BytesIO()
-    qr.save(output, kind='png', scale=scale)
-    # background = get_random_background_path()
-    # qr = qr.to_artistic(
-    #     background=background,
-    #     target=output,
-    #     kind='png',
-    #     scale=scale,
-    #     quiet_zone=True,
-    # )
-    output.seek(0)
-    return output.getvalue()
+    # qr.save(output, kind='png', scale=scale)
+    decoded = None
+    while decoded != flag:
+        try:
+            background = get_random_background_path()
+            qr = qr.to_artistic(
+                background=background,
+                target=output,
+                kind='png',
+                scale=scale,
+            )
+            output.seek(0)
+            res = output.getvalue()
+            decoded = read_qr_code(Image.open(io.BytesIO(res)))
+        except:
+            print("Error creating QR code")
+            pass
+        # print(decoded)
+    return res
 
 
 def get_random_image() -> bytes:
@@ -58,3 +66,16 @@ def read_qr_code(image: Image) -> str:
             return qr_data[0].data.decode('utf-8')
 
     return None
+
+
+if __name__ == "__main__":
+    import random
+    import string
+    # ENO[A-Za-z0-9+\/=]{48}
+    flag = 'ENO'+''.join(random.choices(string.ascii_letters +
+                                        string.digits + '\/=', k=48))
+    qr = create_qr_code(flag)
+    # get image resolution:
+    image = Image.open(io.BytesIO(qr))
+    print(image.size)
+    image.show()
