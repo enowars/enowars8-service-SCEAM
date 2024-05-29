@@ -18,7 +18,7 @@ def get_random_background_path() -> str:
 
 # TODO check decodability
 def create_qr_code(flag) -> bytes:
-    scale = 7
+    scale = 5
     qr = segno.make_qr(flag)
     output = io.BytesIO()
     # qr.save(output, kind='png', scale=scale)
