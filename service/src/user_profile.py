@@ -21,6 +21,9 @@ async def profile(email):
         ENOFT_creator()
 
     user = User.query.filter_by(email=email).first()
+    if user is None:
+        flash(f"User with email {email} does not exist.", 'error')
+        return redirect(url_for('views.home'))
     enofts = ENOFT.query.filter_by(owner_email=user.email).all()
     file_names = [e.image_path for e in enofts]
     name = user.name + " <" + user.email + ">"
