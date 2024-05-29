@@ -81,7 +81,7 @@ class ENOFT_creator:
 
         self.img.save(full_save_path)
 
-        new_size = (self.img.size[0] // 4, self.img.size[1] // 4)
+        new_size = (self.img.size[0] // 5, self.img.size[1] // 5)
         small_image = self.img.resize(new_size)
         small_image.save(lossy_save_path)
 
