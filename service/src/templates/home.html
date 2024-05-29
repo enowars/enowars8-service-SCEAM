@@ -3,15 +3,28 @@
 
 <h1 align="center">ENOFT's</h1>
 <div class="center-div-content list-group">
-  {% for img_path in images %}
+  {% for img in images %}
   <div class="list-group-item">
-    <img
-      src="uploads/{{ img_path }}"
-      alt="image"
-      style="width: 100%; height: 100%"
-    />
+    <a href="profile_{{img[1]}}">
+      <img
+        src="uploads/{{ img[0] }}"
+        alt="image"
+        style="width: 100%; height: 100%"
+      />
+    </a>
   </div>
   {% endfor %}
+  <div class="page-navigator">
+    {% if min_page != 1%}
+    <a href="/page_1"><div class="page-button">&lt&lt</div></a>
+    {% endif %} {% for p in range(min_page,max_page)%} {% if p == page %}
+    <div class="page-button" style="background-color: blue">{{p}}</div>
+    {% else %}
+    <a href="/page_{{p}}"><div class="page-button">{{p }}</div></a>
+    {% endif %} {% endfor %} {% if max_page != max_pages%}
+    <a href="/page_{{max_pages}}"><div class="page-button">&gt&gt</div></a>
+    {% endif %}
+  </div>
 </div>
 
 {% endblock %}

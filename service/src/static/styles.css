@@ -7,6 +7,25 @@ div {
     color: var(--default-text-color);
 }
 
+.page-navigator {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin: 20px;
+}
+
+.page-button {
+    background-color: var(--highlight-blue);
+    color: var(--default-text-color);
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12pt;
+    margin: 5px;
+}
+
 .form-button {
     width: 70%;
     width: 60%;
