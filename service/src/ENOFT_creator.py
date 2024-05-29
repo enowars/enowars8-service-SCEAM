@@ -4,6 +4,7 @@ from flask_login import current_user
 from . import db
 from .models import ENOFT
 from PIL import Image
+from PIL.Image import Resampling
 import random
 import string
 import os
@@ -82,7 +83,7 @@ class ENOFT_creator:
         self.img.save(full_save_path)
 
         new_size = (self.img.size[0] // 5, self.img.size[1] // 5)
-        small_image = self.img.resize(new_size)
+        small_image = self.img.resize(new_size, Resampling.NEAREST)
         small_image.save(lossy_save_path)
 
         new_enoft = ENOFT(
