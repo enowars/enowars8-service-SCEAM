@@ -16,6 +16,8 @@ FROM python:3.12.2-slim
 COPY src/ /src/
 COPY main.py /
 COPY requirements.txt /
+COPY cleanup.py /
+COPY entrypoint.sh /
 
 # Change the working directory.
 # WORKDIR /service/
@@ -28,5 +30,6 @@ COPY requirements.txt /
 RUN pip install -r requirements.txt
 
 # Run the service
-# ENTRYPOINT ["/entrypoint.sh"]
-CMD gunicorn --bind 0.0.0.0:8008 main:app
+ENTRYPOINT ["/entrypoint.sh"]
+
+

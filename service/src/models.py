@@ -11,6 +11,7 @@ class User(db.Model, UserMixin):
     enofts = db.relationship('ENOFT')
     never_full = db.Column(db.Boolean, default=False)
     vendor_lock = db.Column(db.Boolean, default=False)
+    creation_date = db.Column(db.DateTime(timezone=True), default=func.now())
 
 
 class ENOFT(db.Model):
