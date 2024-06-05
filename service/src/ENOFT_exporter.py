@@ -49,7 +49,6 @@ def get_encryption_algorithm(response):
             response['password'],
             response['encryption_algorithm']).run()
     except Exception as e:
-        print(e)
         logger.error(e)
         return BestAvailableEncryption(str.encode(response['password']))
 
@@ -65,7 +64,6 @@ def run():
     if not enoft:
         return {'error': 'Invalid Image'}
     res = {'error': 'serialization did not complete'}
-    start = time.time()
     try:
         with Manager() as manager:
             res = manager.dict()
@@ -74,7 +72,6 @@ def run():
                 res['password'] = request.form['password']
                 res['private_key'] = request.files['private_key'].read()
                 res['encryption_algorithm'] = request.form['encryption_algorithm']
-                print(res['encryption_algorithm'])
             except:
                 res['error'] = "Invalid Request"
                 return res
@@ -85,5 +82,4 @@ def run():
             res = dict(res)
     except Exception as e:
         res['error'] = str(e)
-    print(f"Time taken: {time.time() - start}")
     return res

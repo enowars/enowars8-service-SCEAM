@@ -67,7 +67,6 @@ async def export(path):
                     email=current_user.email))
 
         session['img_path'] = path
-        print(res['data'])
         return render_template(
             "show_serialization.html",
             user=current_user,

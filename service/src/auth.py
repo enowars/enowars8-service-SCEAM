@@ -20,15 +20,10 @@ async def login():
         return render_template("login.html", user=current_user)
 
     # handle form submission
-    print(request.form)
     try:
         email = request.form.get('email')
         private_key = request.form.get('private_key')
         if 'file' not in request.files:
-            flash("request.files: " + str(request.files), 'error')
-            flash("request.form: " + str(request.form), 'error')
-
-            print(request.files)
             flash('No file part', 'error')
             return login_error_handler("Private key not found.")
         private_key = request.files['file'].read()
@@ -45,10 +40,12 @@ async def login():
     if user.name != name:
         return login_error_handler(
             f"User {user.name} with email {email} does not have name {name}.")
+    try:
+        valid_keys(private_key, user)
 
-    if not valid_keys(private_key, user):
+    except Exception as e:
         return login_error_handler(
-            f"Private key does not match public key for user with email {email}.")
+            f"Private key does not match public key.")
 
     login_user(user, remember=True)
     set_session_name(user)
@@ -59,16 +56,21 @@ async def login():
 def valid_keys(private_key, user):
     example_message = b"example message to be encrypted"
     public_key = serialization.load_pem_public_key(user.public_key.encode())
-    encrypted = public_key.encrypt(
+    logger.info(f"created signature with {private_key}")
+    signature = private_key.sign(
         example_message,
-        padding.OAEP(
-            mgf=padding.MGF1(
-                algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None))
-    decrypted = private_key.decrypt(encrypted, padding.OAEP(mgf=padding.MGF1(
-        algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
-    return decrypted == example_message
+        padding.PKCS1v15(),
+        hashes.SHA256()
+    )
+    logger.info(
+        f"verifying {private_key} with {signature} {example_message} {public_key}")
+
+    public_key.verify(
+        signature,
+        example_message,
+        padding.PKCS1v15(),
+        hashes.SHA256()
+    )
 
 
 def login_error_handler(msg):

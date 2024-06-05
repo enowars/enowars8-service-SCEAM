@@ -91,10 +91,7 @@ def main():
     input = ".kdf_rounds(50000).key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC).hmac_hash(hashes.SHA256())"
     try:
         return UserInputParser(password, input).run()
-    except Exception as e:
-        # flash(e, "error")
-        # flash("Something went Wrong, replacing your algorithm with the best availible one", "error")
-        print(e)
+    except:
         return BestAvailableEncryption(str.encode(password))
 
 
