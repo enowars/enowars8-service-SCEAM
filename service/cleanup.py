@@ -26,8 +26,8 @@ class db_cleanup():
         self.db.close()
 
     def cleanup(self):
-        self.cleanup_uploads()
         self.cleanup_users()
+        self.cleanup_uploads()
 
     def cleanup_files(self, names_list):
         full_path = os.path.join(uploads_path, 'full')
@@ -47,7 +47,7 @@ class db_cleanup():
             i[4] = datetime.datetime.strptime(i[4], '%Y-%m-%d %H:%M:%S')
 
         to_be_deleted = list(
-            filter(lambda x: x[4] < self.cut_off, all_uploads))
+            filter(lambda x: x[4] < self.cut_off or x[-2] in self.deleted_owners, all_uploads))
         names = list(map(lambda x: x[1], to_be_deleted))
         self.cleanup_files(names)
 
@@ -63,13 +63,15 @@ class db_cleanup():
             i[6] = datetime.datetime.strptime(i[6], '%Y-%m-%d %H:%M:%S')
         to_be_deleted = list(
             filter(lambda x: x[6] < self.cut_off, all_users))
-        to_be_deleted = list(map(lambda x: x[0], to_be_deleted))
+        to_be_deleted = list(map(lambda x: x[1], to_be_deleted))
+        self.deleted_owners = to_be_deleted
         for i in to_be_deleted:
-            self.db.execute('DELETE from user WHERE id=?', (i,))
+            self.db.execute('DELETE from user WHERE email=?', (i,))
 
 
 if __name__ == '__main__':
-    seconds_to_sleep = CLEANUP_INTERVAL.total_seconds()
+    seconds_to_sleep = 60*5
+    # seconds_to_sleep = 10
     while True:
         print(f"Running cleanup every {seconds_to_sleep} seconds")
         db_cleanup()

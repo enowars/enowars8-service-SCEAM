@@ -6,6 +6,7 @@ import logging
 import os
 from cryptography.hazmat.primitives.asymmetric import rsa
 from pathlib import Path
+import random
 
 logger = logging.getLogger("ENOFT_LOGER")
 logger.setLevel(logging.DEBUG)
@@ -22,7 +23,9 @@ UPLOAD_FOLDER = os.path.join(SRC_FOLDER, 'uploads')
 db = SQLAlchemy()
 DB_NAME = "database.db"
 SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_NAME}"
-SECRET_KEY = 'hjshjhdjah kjshkjdhjs'
+# random cookie key
+SECRET_KEY = ''.join(random.choice(
+    'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50))
 
 
 def create_app():
