@@ -17,8 +17,8 @@ def timing(f):
         ret = f(*args)
         time2 = time.time()
         diff = time2-time1
-        print(f'{f.__name__} took {diff:.2f} s')
-        print(f'{f.__name__} took {diff/THREADS:.5f} s per thread')
+        # print(f'{f.__name__} took {diff:.2f} s')
+        # print(f'{f.__name__} took {diff/THREADS:.5f} s per thread')
         return ret
     return wrap
 
@@ -111,4 +111,5 @@ def stress():
 
 
 if __name__ == "__main__":
-    stress()
+    while (True):
+        stress()

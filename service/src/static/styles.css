@@ -177,7 +177,7 @@ label {
 }
 
 .content_container {
-    width: 55%;
+    width: 50%;
     margin: 5% 20%;
     padding: 0;
     background-color:var(--main-bg-color-rgba);

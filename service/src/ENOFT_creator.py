@@ -72,6 +72,7 @@ class ENOFT_creator:
 
     @shortcuircuit
     def handle_upload(self):
+        DOWNSCALE_FACTOR = 5
         file_name = generate_unique_filename()
 
         full_save_path = os.path.join(
@@ -82,8 +83,9 @@ class ENOFT_creator:
 
         self.img.save(full_save_path)
 
-        new_size = (self.img.size[0] // 4, self.img.size[1] // 4)
-        small_image = self.img.resize(new_size, Resampling.NEAREST)
+        new_size = (self.img.size[0] // DOWNSCALE_FACTOR,
+                    self.img.size[1] // DOWNSCALE_FACTOR)
+        small_image = self.img.resize(new_size, Resampling.BOX)
         small_image.save(lossy_save_path)
 
         new_enoft = ENOFT(

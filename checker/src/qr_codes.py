@@ -18,8 +18,8 @@ def get_random_background_path() -> str:
 
 # TODO check decodability
 def create_qr_code(flag) -> bytes:
-    scale = 9
-    qr = segno.make_qr(flag)
+    scale = 10
+    qr = segno.make_qr(flag, error='L', boost_error=False)
     output = io.BytesIO()
     # qr.save(output, kind='png', scale=scale)
     decoded = None
@@ -33,6 +33,7 @@ def create_qr_code(flag) -> bytes:
                 target=output,
                 kind='png',
                 scale=scale,
+
             )
             output.seek(0)
             res = output.getvalue()

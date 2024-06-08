@@ -39,7 +39,10 @@ async def profile(email):
 @user_profile.route('/uploads/<path:path>', methods=['GET', 'POST'])
 async def uploads(path):
     owner_email = ENOFT.query.filter_by(image_path=path).first().owner_email
-    session_email = parseaddr(session['name'])[1]
+    if session.get('name') is None:
+        session_email = None
+    else:
+        session_email = parseaddr(session['name'])[1]
     owned = True if session_email == owner_email else False
     force_lossy = User.query.filter_by(email=owner_email).first().never_full
     if not owned or force_lossy:
