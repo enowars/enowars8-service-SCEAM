@@ -15,7 +15,7 @@ def get_random_background_path() -> str:
     return os.path.join(background_folder, background_file)
 
 
-def create_qr_code(flag, scale=10, border=20) -> bytes:
+def create_qr_code(flag, scale=10, border=15) -> bytes:
     # version 3 to minimize the size of the QR code
     qr = segno.make_qr(flag, error='L', boost_error=False, version=4)
     output = io.BytesIO()
