@@ -13,9 +13,9 @@ FROM python:3.12.2-slim
 # RUN chmod +x /entrypoint.sh
 
 # Copy our service
-COPY src/ /src/
-COPY main.py /
 COPY requirements.txt /
+RUN pip install -r requirements.txt
+COPY main.py /
 COPY cleanup.py /
 COPY entrypoint.sh /
 COPY gunicorn.conf.py /
@@ -29,8 +29,8 @@ RUN chmod +x /entrypoint.sh
 
 
 
-RUN pip install -r requirements.txt
 
+COPY src/ /src/
 # Run the service
 ENTRYPOINT ["/entrypoint.sh"]
 

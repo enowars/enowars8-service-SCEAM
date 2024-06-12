@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from PIL import Image
 import io
 from logging import LoggerAdapter
-from enochecker3 import MumbleException
+from enochecker3 import MumbleException, OfflineException
 from requests import Session
 
 success_login = "Logged in successfully!"
@@ -38,6 +38,12 @@ class InteractionManager:
         self.forced_name = forced_name
         self.address = address
         self.client = Session()
+        self.ping()
+
+    def ping(self):
+        r = self.client.get(self.address+"page_1", allow_redirects=True)
+        if r.status_code != 200:
+            raise OfflineException("Error pinging")
 
     async def register(
             self,

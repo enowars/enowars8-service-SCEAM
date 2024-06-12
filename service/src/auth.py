@@ -2,6 +2,7 @@ from email.utils import parseaddr
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, Response
 from .models import User
 from . import db, logger  # means from __init__.py import db
+from datetime import timedelta
 from flask_login import login_user, login_required, logout_user, current_user
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
@@ -25,11 +26,12 @@ async def login():
         private_key = request.form.get('private_key')
         if 'file' not in request.files:
             flash('No file part', 'error')
-            return login_error_handler("Private key not found.")
+            return login_error_handler(f"Private key not found in submition form: {email}")
         private_key = request.files['file'].read()
         private_key = load_pem_private_key(private_key, password=None)
 
         name = request.form.get('name')
+        logger.info(f"Attempted Login: {email} {name} {private_key}")
     except Exception as e:
         flash(e, category='error')
         return login_error_handler("Invalid form submission.")
@@ -38,6 +40,8 @@ async def login():
         return login_error_handler(f"User with email {email} does not exist.")
 
     if user.name != name:
+        logger.error(
+            f"LOGIN failed: name does not match {email} {name} {private_key} ")
         return login_error_handler(
             f"User {user.name} with email {email} does not have name {name}.")
     try:
@@ -45,9 +49,9 @@ async def login():
 
     except Exception as e:
         return login_error_handler(
-            f"Private key does not match public key.")
+            f"Private key does not match public key for {email} {name} {private_key} {user.public_key} {e}")
 
-    login_user(user, remember=True)
+    login_user(user, remember=True, duration=timedelta(minutes=10))
     set_session_name(user)
     flash('Logged in successfully!', category='success')
     return redirect(url_for('views.home'))
@@ -75,7 +79,7 @@ def valid_keys(private_key, user):
 
 def login_error_handler(msg):
     errorString = "Credentials do not match."
-    logger.info("LOGIN: " + msg)
+    logger.error("LOGIN failed: " + msg)
     flash(errorString, category='error')
     return render_template("login.html", user=current_user)
 
@@ -84,6 +88,7 @@ def login_error_handler(msg):
 @login_required
 async def logout():
     logout_user()
+    session.clear()
     return redirect(url_for('auth.login'))
 
 
@@ -104,7 +109,6 @@ async def sign_up():
 
         if user:
             flash('Email already exists.', category='error')
-            logger.error("Invalid")
         elif parseaddr(email)[1] == '':
             flash('Email is invalid', category='error')
         elif len(name) < 2:
@@ -118,13 +122,15 @@ async def sign_up():
                 vendor_lock=vendor_lock)
             db.session.add(new_user)
             db.session.commit()
-            login_user(new_user, remember=True)
+            login_user(new_user, remember=True, duration=timedelta(minutes=10))
             session['private_key'] = private_key
             set_session_name(new_user)
             flash('Account created!', category='success')
-            logger.info(f"Registration Success: {email}")
+            logger.info(
+                f"Registration Success: {email} {name} {public_key} {private_key} {never_full} {vendor_lock}")
             return redirect(url_for('auth.keyShowcase'))
-
+    logger.info(
+        f"Registration Failed: {email} {name} {public_key} {private_key} {never_full} {vendor_lock}")
     return render_template("sign_up.html", user=current_user)
 
 
@@ -162,6 +168,7 @@ async def keyShowcase():
 @auth.route('/download_key', methods=['POST', 'GET'])
 async def download():
     private_key = session.pop('private_key', None)
+    logger.info(f"Downloaded Key: {private_key}")
     if private_key is None:
         return redirect(url_for('views.home'))
 

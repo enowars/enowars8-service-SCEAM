@@ -34,7 +34,7 @@ async def page(number):
     # get images
     images = all_images[(number - 1) *
                         IMAGES_PER_PAGE:number * IMAGES_PER_PAGE]
-
+    logger.info("Home page accessed")
     return render_template(
         "home.html",
         user=current_user,

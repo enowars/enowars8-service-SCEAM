@@ -9,7 +9,8 @@ from enochecker3 import (
     ExploitCheckerTaskMessage,
     PutnoiseCheckerTaskMessage,
     GetnoiseCheckerTaskMessage,
-    HavocCheckerTaskMessage
+    HavocCheckerTaskMessage,
+    OfflineException
 )
 from typing import Optional
 from utils import InteractionManager, generate_random_string
@@ -30,7 +31,11 @@ async def putflag_email(
     flag = task.flag
     qrCode = qr_codes.create_qr_code(flag)
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = InteractionManager(address, logger)
+    m = None
+    try:
+        m = InteractionManager(address, logger)
+    except:
+        raise OfflineException("Service unreachable/invalid")
     try:
         await m.register(vendor_lock=True)
     except:
@@ -55,10 +60,17 @@ async def getflag_email(
     try:
         credentials = await db.get("credentials")
     except:
-        raise MumbleException("No credentials saved in db")
+        logger.error("No credentials saved in db")
+        raise MumbleException("Put failed")
+
     logger.info(f"Got credentials: {credentials}")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = InteractionManager(address, logger, email_name_key=credentials)
+    m = None
+    try:
+        m = InteractionManager(address, logger, email_name_key=credentials)
+    except:
+        raise OfflineException("Service unreachable/invalid")
+
     try:
         await m.login()
     except:
@@ -85,7 +97,12 @@ async def exploit_email(
     email = task.attack_info
     name = email + "("
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = InteractionManager(address, logger, forced_name=name)
+    m = None
+    try:
+        m = InteractionManager(address, logger, forced_name=name)
+    except:
+        raise OfflineException("Service unreachable/invalid")
+
     try:
         await m.register()
     except:
@@ -111,7 +128,12 @@ async def putflag_export(
     flag = task.flag
     qrCode = qr_codes.create_qr_code(flag)
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = InteractionManager(address, logger)
+    m = None
+    try:
+        m = InteractionManager(address, logger)
+    except:
+        raise OfflineException("Service unreachable/invalid")
+
     try:
         await m.register(low_quality=True)
     except:
@@ -139,7 +161,12 @@ async def getflag_export(
         raise MumbleException("No credentials saved in db")
     logger.info(f"Got credentials: {credentials}")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = InteractionManager(address, logger, email_name_key=credentials)
+    m = None
+    try:
+        m = InteractionManager(address, logger, email_name_key=credentials)
+    except:
+        raise OfflineException("Service unreachable/invalid")
+
     try:
         await m.login()
     except:
@@ -173,7 +200,11 @@ async def exploit_export(
     logger.info(f"Exploiting {task.attack_info} ")
     email = task.attack_info
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = InteractionManager(address, logger)
+    m = None
+    try:
+        m = InteractionManager(address, logger)
+    except:
+        raise OfflineException("Service unreachable/invalid")
     await m.register()
     urls = await m.get_profile_image_urls(email)
     if not urls:
@@ -202,7 +233,11 @@ async def putnoise_0(
     await db.set("random_string", random_string)
     logger.info("Putting noise")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = InteractionManager(address, logger)
+    m = None
+    try:
+        m = InteractionManager(address, logger)
+    except:
+        raise OfflineException("Service unreachable/invalid")
     try:
         await m.register(vendor_lock=True)
     except:
@@ -229,7 +264,11 @@ async def getnoise_0(
     noise = await db.get("random_string")
     logger.info(f"Got credentials: {credentials}")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = InteractionManager(address, logger, email_name_key=credentials)
+    m = None
+    try:
+        m = InteractionManager(address, logger, email_name_key=credentials)
+    except:
+        raise OfflineException("Service unreachable/invalid")
     try:
         await m.login()
     except:
@@ -256,7 +295,11 @@ async def putnoise_1(
     await db.set("random_string", random_string)
     logger.info("Putting noise")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = InteractionManager(address, logger)
+    m = None
+    try:
+        m = InteractionManager(address, logger)
+    except:
+        raise OfflineException("Service unreachable/invalid")
     try:
         await m.register(low_quality=True)
     except:
@@ -283,7 +326,12 @@ async def getnoise_1(
     noise = await db.get("random_string")
     logger.info(f"Got credentials: {credentials}")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = InteractionManager(address, logger, email_name_key=credentials)
+    m = None
+    try:
+        m = InteractionManager(address, logger, email_name_key=credentials)
+    except:
+        raise OfflineException("Service unreachable/invalid")
+
     try:
         await m.login()
     except:
@@ -311,8 +359,12 @@ async def getnoise_1(
 @checker.havoc(0)
 async def havoc_0(task: HavocCheckerTaskMessage, logger: LoggerAdapter):
     logger.info("Havoc")
-    m = InteractionManager("http://" + task.address +
-                           ":" + str(SERVICE_PORT) + "/", logger)
+    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
+    m = None
+    try:
+        m = InteractionManager(address, logger)
+    except:
+        raise OfflineException("Service unreachable/invalid")
     try:
         main = await m.get_home_page()
     except:
