@@ -4,9 +4,8 @@ import random
 import io
 from pyzbar.pyzbar import decode
 from PIL import Image
-
-# TODO Logging
-
+from customized_plugin import write_artistic
+RETRIES = 100
 background_folder = os.path.join(os.path.dirname(__file__), "backgrounds")
 
 
@@ -16,36 +15,34 @@ def get_random_background_path() -> str:
     return os.path.join(background_folder, background_file)
 
 
-# TODO check decodability
-def create_qr_code(flag) -> bytes:
-    scale = 10
-    qr = segno.make_qr(flag, error='l', boost_error=False, mask=5)
+def create_qr_code(flag, scale=10, border=20) -> bytes:
+    # version 3 to minimize the size of the QR code
+    qr = segno.make_qr(flag, error='L', boost_error=False, version=4)
     output = io.BytesIO()
-    # qr.save(output, kind='png', scale=scale)
     decoded = None
     iters = 0
-    while decoded != flag and iters < 100:
+    while decoded != flag and iters < RETRIES:
         iters += 1
         try:
             background = get_random_background_path()
-            qr.to_artistic(
-                background=background,
-                target=output,
-                kind='png',
-                scale=scale,
-
-            )
+            with open(background, 'rb') as f:
+                global original_image
+                original_image = Image.open(f)
+            print("background: ", background)
+            write_artistic(qr, background=background, target=output,
+                           kind='png', scale=scale, border=border)
+            print("Created QR code with background")
             output.seek(0)
             res = output.getvalue()
             decoded = read_qr_code(Image.open(io.BytesIO(res)))
-        except:
-            print("Error creating QR code")
+        except Exception as e:
+            print("Error creating QR code", e)
             pass
-        # print(decoded)
-    if iters == 100:
+    if iters == RETRIES:
         qr.save(output, kind='png', scale=scale)
         output.seek(0)
         res = output.getvalue()
+    print("qr metadata: ", qr.designator)
     return res
 
 
@@ -53,7 +50,6 @@ def get_random_image() -> bytes:
     path = get_random_background_path()
     with open(path, 'rb') as f:
         data = f.read()
-
     return data
 
 

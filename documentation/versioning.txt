@@ -1,2 +1,0 @@
-python 3.10.9 
-pip install cryptography==39.0.1
