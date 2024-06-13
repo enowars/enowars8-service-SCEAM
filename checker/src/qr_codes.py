@@ -5,7 +5,7 @@ import io
 from pyzbar.pyzbar import decode
 from PIL import Image
 from customized_plugin import write_artistic
-RETRIES = 100
+RETRIES = 10
 background_folder = os.path.join(os.path.dirname(__file__), "backgrounds")
 
 
@@ -15,59 +15,44 @@ def get_random_background_path() -> str:
     return os.path.join(background_folder, background_file)
 
 
-def create_qr_code(flag, scale=10, border=15) -> bytes:
+def create_qr_code(flag, scale=12, border=30) -> bytes:
     # version 3 to minimize the size of the QR code
     qr = segno.make_qr(flag, error='L', boost_error=False, version=4)
     output = io.BytesIO()
     decoded = None
     iters = 0
+    qr_image = None
     while decoded != flag and iters < RETRIES:
         iters += 1
         try:
             background = get_random_background_path()
-            with open(background, 'rb') as f:
-                global original_image
-                original_image = Image.open(f)
-            print("background: ", background)
-            write_artistic(qr, background=background, target=output,
-                           kind='png', scale=scale, border=border)
-            print("Created QR code with background")
+            print("Creating QR code with background", background)
+            qr.save(output, kind='png', scale=scale, border=border)
+            qr_image = Image.open(output)
+            output = io.BytesIO()
+            qr_image = qr_image.convert('RGBA')
+            overlay = Image.open(background)
+            qr_image.paste(overlay, (0, 0), overlay)
+            qr_image.save(output, format='PNG')
             output.seek(0)
             res = output.getvalue()
-            decoded = read_qr_code(Image.open(io.BytesIO(res)))
+            generated_img = Image.open(io.BytesIO(res))
+            decoded = read_qr_code(generated_img)
         except Exception as e:
             print("Error creating QR code", e)
             pass
     if iters == RETRIES:
-        qr.save(output, kind='png', scale=scale)
+        qr.save(output, kind='png', scale=5)
         output.seek(0)
         res = output.getvalue()
-    print("qr metadata: ", qr.designator)
     return res
 
 
-def get_random_image() -> bytes:
-    path = get_random_background_path()
-    with open(path, 'rb') as f:
-        data = f.read()
-    return data
-
-
 def read_qr_code(image: Image) -> str:
-    # Open the GIF image using PIL
-
-    # Loop through each frame of the possible GIF
-    for frame in range(image.n_frames):
-        # Seek to the current frame
-        image.seek(frame)
-
-        # Decode the QR code
-        qr_data = decode(image)
-
-        # If QR code is detected, return the decoded data
-        if qr_data:
-            return qr_data[0].data.decode('utf-8')
-
+    qr_data = decode(image)
+    # If QR code is detected, return the decoded data
+    if qr_data:
+        return qr_data[0].data.decode('utf-8')
     return None
 
 

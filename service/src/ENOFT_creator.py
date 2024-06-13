@@ -72,7 +72,7 @@ class ENOFT_creator:
 
     @shortcuircuit
     def handle_upload(self):
-        DOWNSCALE_FACTOR = 5
+        DOWNSCALE_FACTOR = 6
         file_name = generate_unique_filename()
 
         full_save_path = os.path.join(

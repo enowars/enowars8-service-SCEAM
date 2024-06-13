@@ -14,4 +14,9 @@ RUN python3 -m pip install -r requirements.txt
 
 COPY ./src .
 
+USER root
+RUN chown -R checker:checker /checker
+USER checker
+RUN python ./background_processor.py
+
 ENTRYPOINT [ "/home/checker/.local/bin/gunicorn", "-c", "gunicorn.conf.py", "checker:app" ]

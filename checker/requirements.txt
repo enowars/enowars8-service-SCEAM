@@ -8,3 +8,4 @@ pyzbar==0.1.9
 segno==1.6.1
 qrcode-artistic
 requests
+tqdm
