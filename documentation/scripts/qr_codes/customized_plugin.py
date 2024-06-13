@@ -4,7 +4,7 @@ import math
 from PIL import Image, ImageDraw, ImageSequence
 from segno import consts
 try:
-    from PIL.Image.Resampling import LANCZOS
+    from PIL.Image.Resampling import LANCZOS  # type: ignore
 except ImportError:
     from PIL.Image import LANCZOS
 

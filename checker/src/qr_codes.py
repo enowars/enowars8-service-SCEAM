@@ -4,7 +4,6 @@ import random
 import io
 from pyzbar.pyzbar import decode
 from PIL import Image
-from customized_plugin import write_artistic
 RETRIES = 10
 background_folder = os.path.join(os.path.dirname(__file__), "backgrounds")
 
