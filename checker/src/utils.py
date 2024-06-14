@@ -6,6 +6,7 @@ import io
 from logging import LoggerAdapter
 from enochecker3 import MumbleException, OfflineException
 from requests import Session
+from httpx import AsyncClient
 
 success_login = "Logged in successfully!"
 retry = 5
@@ -37,10 +38,9 @@ class InteractionManager:
             self.email, self.name, self.key = ("", "", "")
         self.forced_name = forced_name
         self.address = address
-        self.client = Session()
-        self.ping()
+        self.client = AsyncClient()
 
-    def ping(self):
+    async def ping(self):
         r = self.client.get(self.address+"page_1", allow_redirects=True)
         if r.status_code != 200:
             raise OfflineException("Error pinging")
@@ -63,7 +63,7 @@ class InteractionManager:
         try:
             for i in range(retry):
                 try:
-                    r = self.client.post(self.address + 'sign-up', data=data)
+                    r = await self.client.post(self.address + 'sign-up', data=data)
                     break
                 except:
                     self.logger.info(f"Retrying registration {i}")
@@ -74,7 +74,7 @@ class InteractionManager:
         try:
             for i in range(retry):
                 try:
-                    r = self.client.post(self.address + 'download_key')
+                    r = await self.client.post(self.address + 'download_key')
                     break
                 except:
                     self.logger.info(f"Retrying key download {i}")
@@ -93,11 +93,11 @@ class InteractionManager:
         try:
             for i in range(retry):
                 try:
-                    r = self.client.post(
+                    r = await self.client.post(
                         self.address + 'login',
                         data=data,
                         files=files,
-                        allow_redirects=True)
+                        follow_redirects=True)
                     self.logger.info(f"Login response: {r.content.decode()}")
                     break
                 except:
@@ -117,7 +117,7 @@ class InteractionManager:
         try:
             for i in range(retry):
                 try:
-                    r = self.client.post(
+                    r = await self.client.post(
                         self.address + 'profile_' + self.email, files=files)
                     break
                 except:
@@ -137,7 +137,7 @@ class InteractionManager:
             try:
                 for i in range(retry):
                     try:
-                        r = self.client.get(self.address + e)
+                        r = await self.client.get(self.address + e)
                         break
                     except:
                         self.logger.info(f"Retrying image download {i}")
@@ -157,8 +157,8 @@ class InteractionManager:
         try:
             for i in range(retry):
                 try:
-                    r = self.client.get(self.address + 'profile_' +
-                                        email, allow_redirects=True)
+                    r = await self.client.get(self.address + 'profile_' +
+                                              email, follow_redirects=True)
                     break
                 except:
                     self.logger.info(f"Retrying profile download {i}")
@@ -190,8 +190,8 @@ class InteractionManager:
         try:
             for i in range(retry):
                 try:
-                    r = self.client.post(self.address + 'export_' +
-                                         pure_img, data=data, files=file)
+                    r = await self.client.post(self.address + 'export_' +
+                                               pure_img, data=data, files=file)
                     self.logger.info(f"Export post response: {r.content}")
                     break
                 except:
@@ -204,7 +204,7 @@ class InteractionManager:
         try:
             for i in range(retry):
                 try:
-                    r = self.client.get(self.address + '/download_image')
+                    r = await self.client.get(self.address + '/download_image')
                     self.logger.info(f"Exported image response: {r.content}")
                     break
                 except:
@@ -229,7 +229,7 @@ class InteractionManager:
         try:
             for i in range(retry):
                 try:
-                    r = self.client.get(self.address)
+                    r = await self.client.get(self.address)
                     break
                 except:
                     self.logger.info(f"Retrying home page {i}")
