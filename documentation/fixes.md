@@ -7,7 +7,7 @@
 async def uploads(path):
     owner = ENOFT.query.filter_by(image_path=path).first()
     owner_email = owner.email
-    owner_name = owner.name
+    owner_name = owner.owner_email
     if session.get('name') is None:
         session_email = None
     else:
