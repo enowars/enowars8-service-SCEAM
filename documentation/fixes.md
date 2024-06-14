@@ -6,8 +6,8 @@
 @user_profile.route('/uploads/<path:path>', methods=['GET', 'POST'])
 async def uploads(path):
     owner = ENOFT.query.filter_by(image_path=path).first()
-    owner_email = owner.email
-    owner_name = owner.owner_email
+    owner_email = owner.owner_email
+    owner_name = User.query.filter_by(email=owner_email).first().name
     if session.get('name') is None:
         session_email = None
     else:
