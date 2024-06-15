@@ -380,7 +380,7 @@ async def havoc_0(task: HavocCheckerTaskMessage, logger: LoggerAdapter):
     try:
         main = await m.get_home_page()
     except:
-        raise MumbleException("Service unreachable/invalid")
+        raise OfflineException("Service unreachable/invalid")
     soup = BeautifulSoup(main, "html.parser")
     imgs = soup.find_all("img")
     imgs = [img["src"] for img in imgs]

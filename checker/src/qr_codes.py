@@ -41,7 +41,7 @@ def create_qr_code(flag, scale=12, border=30) -> bytes:
             print("Error creating QR code", e)
             pass
     if iters == RETRIES:
-        qr.save(output, kind='png', scale=5)
+        qr.save(output, kind='png', scale=3, border=border)
         output.seek(0)
         res = output.getvalue()
     return res

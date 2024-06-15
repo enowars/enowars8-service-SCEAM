@@ -85,7 +85,7 @@ class ENOFT_creator:
 
         new_size = (self.img.size[0] // DOWNSCALE_FACTOR,
                     self.img.size[1] // DOWNSCALE_FACTOR)
-        small_image = self.img.resize(new_size, Resampling.BOX)
+        small_image = self.img.resize(new_size, Resampling.NEAREST)
         small_image.save(lossy_save_path)
 
         new_enoft = ENOFT(

@@ -126,7 +126,7 @@ class InteractionManager:
             self.logger.error(
                 f"Error uploading image {self.email}, ip: {self.address + 'profile_' + self.email}, error: {e}")
             raise MumbleException("Error uploading image")
-        return 
+        return
 
     async def download_profile_images_from_self(self):
         return await self.download_profile_images_from_email(self.email)
@@ -229,7 +229,7 @@ class InteractionManager:
         try:
             for i in range(retry):
                 try:
-                    r = await self.client.get(self.address)
+                    r = await self.client.get(self.address, follow_redirects=True)
                     break
                 except:
                     self.logger.info(f"Retrying home page {i}")
