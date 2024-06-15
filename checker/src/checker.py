@@ -34,6 +34,7 @@ async def putflag_email(
     m = None
     try:
         m = InteractionManager(address, logger)
+        await m.ping()
     except:
         raise OfflineException("Service unreachable/invalid")
     try:
@@ -71,6 +72,7 @@ async def getflag_email(
     m = None
     try:
         m = InteractionManager(address, logger, email_name_key=credentials)
+        await m.ping()
     except:
         raise OfflineException("Service unreachable/invalid")
 
@@ -103,6 +105,7 @@ async def exploit_email(
     m = None
     try:
         m = InteractionManager(address, logger, forced_name=name)
+        await m.ping()
     except:
         raise OfflineException("Service unreachable/invalid")
 
@@ -134,6 +137,7 @@ async def putflag_export(
     m = None
     try:
         m = InteractionManager(address, logger)
+        await m.ping()
     except:
         raise OfflineException("Service unreachable/invalid")
 
@@ -170,6 +174,7 @@ async def getflag_export(
     m = None
     try:
         m = InteractionManager(address, logger, email_name_key=credentials)
+        await m.ping()
     except:
         raise OfflineException("Service unreachable/invalid")
 
@@ -209,6 +214,7 @@ async def exploit_export(
     m = None
     try:
         m = InteractionManager(address, logger)
+        await m.ping()
     except:
         raise OfflineException("Service unreachable/invalid")
     await m.register()
@@ -242,6 +248,7 @@ async def putnoise_0(
     m = None
     try:
         m = InteractionManager(address, logger)
+        await m.ping()
     except:
         raise OfflineException("Service unreachable/invalid")
     try:
@@ -276,6 +283,7 @@ async def getnoise_0(
     m = None
     try:
         m = InteractionManager(address, logger, email_name_key=credentials)
+        await m.ping()
     except:
         raise OfflineException("Service unreachable/invalid")
     try:
@@ -307,6 +315,7 @@ async def putnoise_1(
     m = None
     try:
         m = InteractionManager(address, logger)
+        await m.ping()
     except:
         raise OfflineException("Service unreachable/invalid")
     try:
@@ -341,6 +350,7 @@ async def getnoise_1(
     m = None
     try:
         m = InteractionManager(address, logger, email_name_key=credentials)
+        await m.ping()
     except:
         raise OfflineException("Service unreachable/invalid")
 
@@ -375,6 +385,7 @@ async def havoc_0(task: HavocCheckerTaskMessage, logger: LoggerAdapter):
     m = None
     try:
         m = InteractionManager(address, logger)
+        await m.ping()
     except:
         raise OfflineException("Service unreachable/invalid")
     try:
