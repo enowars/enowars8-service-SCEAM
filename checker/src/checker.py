@@ -45,7 +45,10 @@ async def putflag_email(
     except:
         raise MumbleException("Error depositing flag")
     data = m.dump_info()
-    await db.set("credentials", data)
+    try:
+        await db.set("credentials", data)
+    except:
+        raise MumbleException("Error saving data")
 
     return data["email"]
 
@@ -144,7 +147,10 @@ async def putflag_export(
     except:
         raise MumbleException("Error depositing flag")
     data = m.dump_info()
-    await db.set("credentials", data)
+    try:
+        await db.set("credentials", data)
+    except:
+        raise MumbleException("Error saving data")
     return data["email"]
 
 
@@ -249,7 +255,10 @@ async def putnoise_0(
         raise MumbleException("Error uploading image")
     logger.info("Noise put")
     data = m.dump_info()
-    await db.set("credentials", data)
+    try:
+        await db.set("credentials", data)
+    except:
+        raise MumbleException("Error saving data")
 
 
 @checker.getnoise(0)
@@ -291,7 +300,7 @@ async def putnoise_1(
     db: ChainDB,
     logger: LoggerAdapter
 ):
-    random_string = generate_random_string(20)
+    random_string = generate_random_string(25)
     await db.set("random_string", random_string)
     logger.info("Putting noise")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
@@ -311,7 +320,10 @@ async def putnoise_1(
         raise MumbleException("Error uploading image")
     logger.info("Noise put")
     data = m.dump_info()
-    await db.set("credentials", data)
+    try:
+        await db.set("credentials", data)
+    except:
+        raise MumbleException("Error saving data")
 
 
 @checker.getnoise(1)

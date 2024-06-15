@@ -126,7 +126,7 @@ class InteractionManager:
             self.logger.error(
                 f"Error uploading image {self.email}, ip: {self.address + 'profile_' + self.email}, error: {e}")
             raise MumbleException("Error uploading image")
-        return r
+        return 
 
     async def download_profile_images_from_self(self):
         return await self.download_profile_images_from_email(self.email)
