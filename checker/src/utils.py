@@ -41,7 +41,7 @@ class InteractionManager:
         self.client = AsyncClient()
 
     async def ping(self):
-        r = self.client.get(self.address+"page_1", allow_redirects=True)
+        r = await self.client.get(self.address+"page_1", follow_redirects=True)
         if r.status_code != 200:
             raise OfflineException("Error pinging")
 
