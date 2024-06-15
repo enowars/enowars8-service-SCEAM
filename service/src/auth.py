@@ -86,9 +86,8 @@ def login_error_handler(msg):
 
 @auth.route('/logout')
 @login_required
-async def logout():
+def logout():
     logout_user()
-    session.clear()
     return redirect(url_for('auth.login'))
 
 
@@ -129,8 +128,6 @@ async def sign_up():
             logger.info(
                 f"Registration Success: {email} {name} {public_key} {private_key} {never_full} {vendor_lock}")
             return redirect(url_for('auth.keyShowcase'))
-    logger.info(
-        f"Registration Failed: {email} {name} {public_key} {private_key} {never_full} {vendor_lock}")
     return render_template("sign_up.html", user=current_user)
 
 
