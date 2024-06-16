@@ -39,7 +39,8 @@
                 OK: 0,
                 MUMBLE: 0,
                 INTERNAL_ERROR: 0,
-                OFFLINE: 0
+                OFFLINE: 0,
+                RECOVERING: 0
             };
 
             for (let j = 0; j < rows.length; j++) {
@@ -51,6 +52,8 @@
                     serviceCounts[names[i]].INTERNAL_ERROR++;
                 } else if (rows[j][i].includes("service-OFFLINE")) {
                     serviceCounts[names[i]].OFFLINE++;
+                } else if (rows[j][i].includes("service-RECOVERING")) {
+                    serviceCounts[names[i]].RECOVERING++;
                 }
             }
         }
@@ -67,7 +70,7 @@
         const headerRow = document.createElement('tr');
         headerRow.style.backgroundColor = '#f2f2f2';
         headerRow.style.color = '#333';
-        const headers = ['Service', 'OK', 'MUMBLE', 'OFFLINE', 'INTERNAL ERROR'];
+        const headers = ['Service', 'OK', 'RECOVERING', 'MUMBLE', 'OFFLINE', 'INTERNAL ERROR'];
         headers.forEach(headerText => {
             const headerCell = document.createElement('th');
             headerCell.textContent = headerText;
@@ -91,7 +94,7 @@
             row.appendChild(serviceNameCell);
 
             // Status cells
-            const statusTypes = ['OK', 'MUMBLE', 'OFFLINE', 'INTERNAL_ERROR',];
+            const statusTypes = ['OK', 'RECOVERING', 'MUMBLE', 'OFFLINE', 'INTERNAL_ERROR',];
             statusTypes.forEach(status => {
                 const statusCell = document.createElement('td');
                 statusCell.textContent = statusCounts[status];
@@ -110,8 +113,9 @@
                         break;
                     case 'OFFLINE':
                         statusCell.style.backgroundColor = '#f8d7da';
-
-
+                        break;
+                    case 'RECOVERING':
+                        statusCell.style.backgroundColor = '#8ec6fa';
                         break;
                     default:
                         break;
