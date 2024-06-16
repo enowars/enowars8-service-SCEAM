@@ -4,16 +4,21 @@
 // @version      0.5
 // @description  Summarize the status of services per column on the scoreboard page and replace the table with the summary
 // @author       a_misc
-// @match        http://localhost:5001/scoreboard
+// @match        http://localhost:5001/scoreboard*
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    // Function to summarize the service statuses per column and replace the table
-    function summarizeAndReplaceTable() {
+    let initialized = false;
+    let summaryTable; // Variable to hold the summary table
+
+    // Function to summarize the service statuses per column and create the summary table
+    function createSummaryTable() {
         // Select the table
         const table = document.querySelector('table.scoreboard');
+        console.log(table);
+        if (!table) return; // If the table is not found, return
 
         // get names
         let names = document.querySelector('thead').querySelectorAll('td');
@@ -25,7 +30,6 @@
         rows = Array.from(rows).map(x => x.querySelectorAll('td'));
         rows = rows.map(x => Array.from(x).map(y => y.className));
         rows = rows.map(x => x.slice(3, x.length));
-        console.log(rows);
 
         // Initialize an object to store the counts per service (column)
         let serviceCounts = {};
@@ -51,9 +55,8 @@
             }
         }
 
-        console.log(serviceCounts);
-
-        const summaryTable = document.createElement('table');
+        // Create the summary table
+        summaryTable = document.createElement('table');
         summaryTable.className = 'summary-table';
         summaryTable.style.width = '100%';
         summaryTable.style.borderCollapse = 'collapse';
@@ -75,7 +78,7 @@
         });
         summaryTable.appendChild(headerRow);
 
-        // Iterate over each service in serviceCounts
+        // Iterate over each service in serviceCounts and populate the summary table
         Object.entries(serviceCounts).forEach(([serviceName, statusCounts]) => {
             const row = document.createElement('tr');
 
@@ -101,25 +104,43 @@
             // Append row to table
             summaryTable.appendChild(row);
         });
-
-        // Find the existing scoreboard table and replace it with the summary table
-        console.log("existing table", table);
-        console.log("summary table", summaryTable);
-        console.log("replacing table");
-        const existingTable = document.querySelector('table.summary-table');
-        if (existingTable) {
-            existingTable.parentNode.removeChild(existingTable);
+        const existingSummaryTable = document.querySelector('.summary-table');
+        if (existingSummaryTable) {
+            existingSummaryTable.parentNode.removeChild(existingSummaryTable);
         }
+        // Find the existing scoreboard table and insert the summary table before it
         table.parentNode.insertBefore(summaryTable, table);
-        console.log("replaced table");
+    }
 
+    // Function to update the summary table when changes are detected (e.g., scoreboard updates)
+    function updateSummaryTable() {
+        console.log('updateSummaryTable');
+
+        // Call createSummaryTable to regenerate the summary table with updated data
+        createSummaryTable();
+    }
+    const observer2 = new MutationObserver(updateSummaryTable);
+
+    function initializeScript() {
+        console.log('initializeScript');
+        const t = document.querySelector('table.scoreboard');
+        if (!t) return;
+        console.log('initializeScript: table found');
+        if (!initialized) {
+            console.log('initializeScript: initializing');
+            initialized = true;
+            const node = document.querySelector('table.scoreboard');
+            console.log("attached to node: ", node);
+            observer2.observe(node, { childList: true, subtree: true });
+            createSummaryTable();
+        }
     }
 
     // Run the summary function when the page loads
-    window.addEventListener('load', summarizeAndReplaceTable);
+    window.addEventListener('load', createSummaryTable);
 
-    // (Optional) Run the summary function when the page updates dynamically
-    // Use MutationObserver if the page updates without a full reload
-    const observer = new MutationObserver(summarizeAndReplaceTable);
+
+    // Use MutationObserver to monitor changes in the DOM that indicate updates
+    const observer = new MutationObserver(initializeScript);
     observer.observe(document.body, { childList: true, subtree: true });
 })();
