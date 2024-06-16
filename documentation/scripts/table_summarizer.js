@@ -67,7 +67,7 @@
         const headerRow = document.createElement('tr');
         headerRow.style.backgroundColor = '#f2f2f2';
         headerRow.style.color = '#333';
-        const headers = ['Service', 'OK', 'MUMBLE', 'INTERNAL ERROR', 'OFFLINE'];
+        const headers = ['Service', 'OK', 'MUMBLE', 'OFFLINE', 'INTERNAL ERROR'];
         headers.forEach(headerText => {
             const headerCell = document.createElement('th');
             headerCell.textContent = headerText;
@@ -98,6 +98,23 @@
                 statusCell.style.padding = '10px';
                 statusCell.style.textAlign = 'center';
                 statusCell.style.border = '1px solid #ddd';
+                switch (status) {
+                    case 'OK':
+                        statusCell.style.backgroundColor = '#d4edda';
+                        break;
+                    case 'MUMBLE':
+                        statusCell.style.backgroundColor = '#fff3cd';
+                        break;
+                    case 'INTERNAL_ERROR':
+                        statusCell.style.backgroundColor = '#f8d7da';
+                        break;
+                    case 'OFFLINE':
+                        statusCell.style.backgroundColor = '#d6d8db';
+
+                        break;
+                    default:
+                        break;
+                }
                 row.appendChild(statusCell);
             });
 
