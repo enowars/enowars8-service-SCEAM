@@ -91,7 +91,7 @@
             row.appendChild(serviceNameCell);
 
             // Status cells
-            const statusTypes = ['OK', 'MUMBLE', 'INTERNAL_ERROR', 'OFFLINE'];
+            const statusTypes = ['OK', 'MUMBLE', 'OFFLINE', 'INTERNAL_ERROR',];
             statusTypes.forEach(status => {
                 const statusCell = document.createElement('td');
                 statusCell.textContent = statusCounts[status];
@@ -106,10 +106,11 @@
                         statusCell.style.backgroundColor = '#fff3cd';
                         break;
                     case 'INTERNAL_ERROR':
-                        statusCell.style.backgroundColor = '#f8d7da';
+                        statusCell.style.backgroundColor = '#d6d8db';
                         break;
                     case 'OFFLINE':
-                        statusCell.style.backgroundColor = '#d6d8db';
+                        statusCell.style.backgroundColor = '#f8d7da';
+
 
                         break;
                     default:
