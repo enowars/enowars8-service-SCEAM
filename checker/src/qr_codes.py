@@ -4,8 +4,17 @@ import random
 import io
 from pyzbar.pyzbar import decode
 from PIL import Image
+import numpy as np
 RETRIES = 3
 background_folder = os.path.join(os.path.dirname(__file__), "backgrounds")
+
+
+def preload_backgrounds():
+
+    background_files = os.listdir(background_folder)
+    for background_file in background_files:
+        path = os.path.join(background_folder, background_file)
+        Image.open(path)
 
 
 def get_random_background_path() -> str:
