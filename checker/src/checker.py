@@ -22,6 +22,9 @@ checker = Enochecker("enoft", 8008)
 def app(): return checker.app
 
 
+CORE_ONLY = False
+
+
 @checker.putflag(0)
 async def putflag_email(
     task: PutflagCheckerTaskMessage,
@@ -241,6 +244,8 @@ async def putnoise_0(
     db: ChainDB,
     logger: LoggerAdapter
 ):
+    if CORE_ONLY:
+        return
     random_string = generate_random_string(20)
     await db.set("random_string", random_string)
     logger.info("Putting noise")
@@ -272,6 +277,8 @@ async def putnoise_0(
 async def getnoise_0(
     task: GetnoiseCheckerTaskMessage, db: ChainDB, logger: LoggerAdapter
 ):
+    if CORE_ONLY:
+        return
     logger.info("Getting noise")
     try:
         credentials = await db.get("credentials")
@@ -308,6 +315,8 @@ async def putnoise_1(
     db: ChainDB,
     logger: LoggerAdapter
 ):
+    if CORE_ONLY:
+        return
     random_string = generate_random_string(25)
     await db.set("random_string", random_string)
     logger.info("Putting noise")
@@ -339,6 +348,8 @@ async def putnoise_1(
 async def getnoise_1(
     task: GetnoiseCheckerTaskMessage, db: ChainDB, logger: LoggerAdapter
 ):
+    if CORE_ONLY:
+        return
     logger.info("Getting noise")
     try:
         credentials = await db.get("credentials")
@@ -380,6 +391,8 @@ async def getnoise_1(
 
 @checker.havoc(0)
 async def havoc_0(task: HavocCheckerTaskMessage, logger: LoggerAdapter):
+    if CORE_ONLY:
+        return
     logger.info("Havoc")
     address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
     m = None
