@@ -5,26 +5,55 @@ import io
 from pyzbar.pyzbar import decode
 from PIL import Image
 import numpy as np
+import cv2
+from segno import consts
+import string
 RETRIES = 3
+SCALE = 12
+BORDER = 30
 background_folder = os.path.join(os.path.dirname(__file__), "backgrounds")
 
 
-def preload_backgrounds():
-
+def preload():
+    # preload backgrounds
+    res = []
     background_files = os.listdir(background_folder)
     for background_file in background_files:
         path = os.path.join(background_folder, background_file)
-        Image.open(path)
+        res.append(cv2.imread(path))
+
+    # preload mask by emulating one holing process
+    flag = 'ENO'+''.join(random.choices(string.ascii_letters +
+                                        string.digits + '\/=', k=48))
+    qr = segno.make_qr(flag, error='L', boost_error=False, version=4)
+    qr_size = qr.symbol_size(scale=SCALE, border=BORDER)
+    keep_modules = (consts.TYPE_FINDER_PATTERN_DARK, consts.TYPE_FINDER_PATTERN_LIGHT, consts.TYPE_SEPARATOR,
+                    consts.TYPE_ALIGNMENT_PATTERN_DARK, consts.TYPE_ALIGNMENT_PATTERN_LIGHT, consts.TYPE_TIMING_DARK,
+                    consts.TYPE_TIMING_LIGHT)
+    border_offset = BORDER * SCALE
+    d = SCALE // 3
+    qr_size_small = qr.symbol_size(scale=SCALE, border=0)
+    mask_image = np.zeros((qr_size_small[1], qr_size_small[0]), dtype=np.uint8)
+    for i, row in enumerate(qr.matrix_iter(scale=SCALE, border=BORDER, verbose=True)):
+        for j, m in enumerate(row):
+            # if qr_code keep_modules goes here make it transparent
+            if m in keep_modules:
+                mask_image[j-border_offset, i-border_offset] = 255
+            # if in qr code and not in border
+            if (i > border_offset and j > border_offset) and (i < qr_size[0] - border_offset and j < qr_size[1] - border_offset):
+                if (((i // d) % 3 == 1) and ((j // d) % 3 == 1)):
+                    mask_image[j-border_offset, i-border_offset] = 255
+    mask_image = cv2.copyMakeBorder(mask_image, border_offset, border_offset,
+                                    border_offset, border_offset, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+
+    return res, mask_image
 
 
-def get_random_background_path() -> str:
-    background_files = os.listdir(background_folder)
-    background_file = random.choice(background_files)
-    return os.path.join(background_folder, background_file)
+preloaded_backgrounds, preloaded_mask = preload()
 
 
-def create_qr_code(flag, scale=12, border=30) -> bytes:
-    # version 3 to minimize the size of the QR code
+def create_qr_code(flag, scale=SCALE, border=BORDER) -> bytes:
+    border_offset = border * scale
     qr = segno.make_qr(flag, error='L', boost_error=False, version=4)
     output = io.BytesIO()
     decoded = None
@@ -33,15 +62,16 @@ def create_qr_code(flag, scale=12, border=30) -> bytes:
     while decoded != flag and iters < RETRIES:
         iters += 1
         try:
-            background = get_random_background_path()
-            print("Creating QR code with background", background)
-            qr.save(output, kind='png', scale=scale, border=border)
-            qr_image = Image.open(output)
+            final_image = random.choice(preloaded_backgrounds).copy()
+            qr.save(output, kind='png', scale=scale, border=0)
+            qr_image = Image.open(qr_image).convert('RGB')
+            qr_image = np.array(qr_image)
+            qr_image = cv2.copyMakeBorder(qr_image, border_offset, border_offset,
+                                          border_offset, border_offset, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+            heatmap = preloaded_mask == 255
+            final_image[heatmap] = qr_image[heatmap]
             output = io.BytesIO()
-            qr_image = qr_image.convert('RGBA')
-            overlay = Image.open(background)
-            qr_image.paste(overlay, (0, 0), overlay)
-            qr_image.save(output, format='PNG')
+            cv2.imencode('.png', final_image)[1].tofile(output)
             output.seek(0)
             res = output.getvalue()
             generated_img = Image.open(io.BytesIO(res))
@@ -58,10 +88,7 @@ def create_qr_code(flag, scale=12, border=30) -> bytes:
 
 def read_qr_code(image: Image) -> str:
     qr_data = decode(image)
-    # If QR code is detected, return the decoded data
-    if qr_data:
-        return qr_data[0].data.decode('utf-8')
-    return None
+    return qr_data[0].data.decode('utf-8')
 
 
 if __name__ == "__main__":

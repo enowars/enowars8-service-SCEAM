@@ -9,3 +9,5 @@ segno==1.6.1
 qrcode-artistic
 requests
 tqdm
+numpy
+opencv-python
