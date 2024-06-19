@@ -38,7 +38,7 @@ class InteractionManager:
             self.email, self.name, self.key = ("", "", "")
         self.forced_name = forced_name
         self.address = address
-        self.client = AsyncClient()
+        self.client = AsyncClient(timeout=10)
 
     async def ping(self):
         r = await self.client.get(self.address+"page_1", follow_redirects=True)
