@@ -88,6 +88,9 @@ def login_error_handler(msg):
 @login_required
 def logout():
     logout_user()
+    session.pop('name', None)
+    session.pop('private_key', None)
+    session.pop('img_path', None)
     return redirect(url_for('auth.login'))
 
 

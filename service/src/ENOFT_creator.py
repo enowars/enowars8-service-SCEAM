@@ -4,7 +4,6 @@ from flask_login import current_user
 from . import db
 from .models import ENOFT
 from PIL import Image
-from PIL.Image import Resampling
 import random
 import string
 import os
@@ -72,29 +71,17 @@ class ENOFT_creator:
 
     @shortcuircuit
     def handle_upload(self):
-        DOWNSCALE_FACTOR = 6
         file_name = generate_unique_filename()
-
         full_save_path = os.path.join(
             current_app.config["FULL_IMAGE_UPLOADS"], file_name)
-        lossy_save_path = os.path.join(
-            current_app.config["LOSSY_IMAGE_UPLOADS"], file_name)
         certificate = build_cert(self.img)
-
         self.img.save(full_save_path)
-
-        new_size = (self.img.size[0] // DOWNSCALE_FACTOR,
-                    self.img.size[1] // DOWNSCALE_FACTOR)
-        small_image = self.img.resize(new_size, Resampling.NEAREST)
-        small_image.save(lossy_save_path)
-
         new_enoft = ENOFT(
             image_path=file_name,
             certificate=certificate,
             owner_email=current_user.email)
         db.session.add(new_enoft)
         db.session.commit()
-
         self.img.close()
         flash('File uploaded')
 

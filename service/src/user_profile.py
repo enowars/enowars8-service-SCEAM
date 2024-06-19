@@ -6,8 +6,11 @@ from .models import ENOFT
 from .ENOFT_creator import ENOFT_creator
 from .ENOFT_exporter import run as ENOFT_export
 from . import logger
+import os
+from PIL import Image
+from PIL.Image import Resampling
 
-
+DOWNSCALE_FACTOR = 6
 user_profile = Blueprint('user_profile', __name__)
 
 
@@ -38,6 +41,20 @@ async def profile(email):
         name=name)
 
 
+def get_lossy_image_path(path):
+    lossy_path = os.path.join(current_app.config['LOSSY_IMAGE_UPLOADS'], path)
+    if not os.path.exists(lossy_path):
+        full_path = os.path.join(
+            current_app.config['FULL_IMAGE_UPLOADS'], path)
+        img = Image.open(full_path)
+        new_size = (img.size[0] // DOWNSCALE_FACTOR,
+                    img.size[1] // DOWNSCALE_FACTOR)
+        small_image = img.resize(new_size, Resampling.NEAREST)
+        small_image.save(lossy_path)
+
+    return lossy_path
+
+
 @user_profile.route('/uploads/<path:path>', methods=['GET', 'POST'])
 async def uploads(path):
     owner_email = ENOFT.query.filter_by(image_path=path).first().owner_email
@@ -50,6 +67,7 @@ async def uploads(path):
     if not owned or force_lossy:
         logger.info(
             f"User {session_email} accessed image {path} lossy version")
+        get_lossy_image_path(path)
         return send_from_directory(
             current_app.config['LOSSY_IMAGE_UPLOADS'], path)
     else:

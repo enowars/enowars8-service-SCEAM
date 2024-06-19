@@ -5,7 +5,6 @@ from PIL import Image
 import io
 from logging import LoggerAdapter
 from enochecker3 import MumbleException, OfflineException
-from requests import Session
 from httpx import AsyncClient
 
 success_login = "Logged in successfully!"
