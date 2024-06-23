@@ -8,7 +8,7 @@ import string
 from tqdm import tqdm
 
 SCALE = 12
-BORDER = 15
+BORDER = 10
 
 # Pathing
 orginal_images_folder = os.path.dirname(os.path.realpath(__file__))
