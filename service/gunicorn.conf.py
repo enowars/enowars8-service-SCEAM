@@ -1,6 +1,7 @@
 import multiprocessing
 
-# worker_class = "uvicorn.workers.UvicornWorker"
+worker_class = "gthread"
+threads = 4
 workers = min(4, multiprocessing.cpu_count())
 bind = "0.0.0.0:8008"
 timeout = 90
