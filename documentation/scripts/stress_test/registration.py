@@ -57,22 +57,28 @@ def stress_sessions():
         t.join()
 
 
-async def register_asyncClient(session, endpoint):
+async def register_aioClient(session):
     data = generate_random_data(10)
     try:
-        async with session.post(address + endpoint, data=data) as response:
-            response_data = await response.text()
-    except Exception as e:
-        print(f"Request to {endpoint} failed: {e}")
+        await session.post(address + 'sign-up', data=data)
+    except aiohttp.ClientError as e:
+        print(f"Request to sign up failed: {e}")
+
+    try:
+        await session.post(address + 'download_key')
+    except aiohttp.ClientError as e:
+        print(f"Request to download key failed: {e}")
+
+    await session.close()
 
 
 async def stress_aiohttp():
     tasks = []
-    async with aiohttp.ClientSession() as session:
-        for _ in range(THREADS):
-            tasks.append(register_asyncClient(session, 'sign-up'))
-            tasks.append(register_asyncClient(session, 'download_key'))
-        await asyncio.gather(*tasks)
+
+    for _ in range(THREADS):
+        session = aiohttp.ClientSession()
+        tasks.append(register_aioClient(session))
+    await asyncio.gather(*tasks)
 
 
 @timing
@@ -80,13 +86,27 @@ def run_async_aiohttp():
     asyncio.run(stress_aiohttp())
 
 
+async def register_asyncClient(client):
+    data = generate_random_data(10)
+    try:
+        response = await client.post(address + 'sign-up', data=data)
+    except Exception as e:
+        print(f"Request to sign up failed: {e}")
+
+    try:
+        response = await client.post(address + 'download_key')
+    except Exception as e:
+        print(f"Request to download key failed: {e}")
+    await client.aclose()
+
+
 async def stress_asyncClient():
     tasks = []
-    async with AsyncClient() as client:
-        for _ in range(THREADS):
-            tasks.append(register_asyncClient(client, 'sign-up'))
-            tasks.append(register_asyncClient(client, 'download_key'))
-        await asyncio.gather(*tasks)
+
+    for _ in range(THREADS):
+        client = AsyncClient()
+        tasks.append(register_asyncClient(client))
+    await asyncio.gather(*tasks)
 
 
 @timing
