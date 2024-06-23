@@ -87,16 +87,18 @@ def run_async_aiohttp():
 
 
 async def register_asyncClient(client):
+
     data = generate_random_data(10)
     try:
-        response = await client.post(address + 'sign-up', data=data)
+        await client.post(address + 'sign-up', data=data)
     except Exception as e:
         print(f"Request to sign up failed: {e}")
 
     try:
-        response = await client.post(address + 'download_key')
+        await client.post(address + 'download_key')
     except Exception as e:
         print(f"Request to download key failed: {e}")
+    print("closing")
     await client.aclose()
 
 
@@ -105,6 +107,7 @@ async def stress_asyncClient():
 
     for _ in range(THREADS):
         client = AsyncClient()
+        print(len(tasks))
         tasks.append(register_asyncClient(client))
     await asyncio.gather(*tasks)
 

@@ -80,9 +80,6 @@ def create_qr_code(flag, scale=SCALE, border=BORDER) -> bytes:
             res = output.getvalue()
             generated_img = Image.open(io.BytesIO(res))
             decoded = read_qr_code(generated_img)
-            if not decoded:
-                print("error decoding code")
-
         except Exception as e:
             print("Error creating QR code", e)
             pass

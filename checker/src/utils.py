@@ -4,11 +4,11 @@ from bs4 import BeautifulSoup
 from PIL import Image
 import io
 from logging import LoggerAdapter
-from enochecker3 import MumbleException, OfflineException
-from httpx import AsyncClient
+from enochecker3 import MumbleException, OfflineException, ChainDB, InternalErrorException
+from httpx import AsyncClient, ConnectTimeout, NetworkError, PoolTimeout, Response
+
 
 success_login = "Logged in successfully!"
-retry = 5
 
 
 def generate_random_string(length):
@@ -22,34 +22,48 @@ def generate_random_string(length):
 class InteractionManager:
     def __init__(
             self,
-            address: str,
+            db: ChainDB,
             logger: LoggerAdapter,
+            client: AsyncClient,
             forced_name: str = None,
-            email_name_key: dict = None) -> None:
+    ) -> None:
+        self.db = db
         self.logger = logger
-        self.logger.info(f"Creating InteractionManager with {address}")
-        if email_name_key:
-            self.logger.info(f"Using email_name_key: {email_name_key}")
-            self.email = email_name_key['email']
-            self.name = email_name_key['name']
-            self.key = email_name_key['key']
-        else:
-            self.email, self.name, self.key = ("", "", "")
+        self.client = client
         self.forced_name = forced_name
-        self.address = address
-        self.client = AsyncClient(timeout=10)
+        self.email, self.name, self.key = ("", "", "")
+        self.logger.info(f"Creating InteractionManager with {client.base_url}")
 
-    async def ping(self):
-        r = await self.client.get(self.address+"page_1", follow_redirects=True)
-        if r.status_code != 200:
-            raise OfflineException("Error pinging")
+    async def load_db(self):
+        try:
+            d = await self.db.get("credentials")
+            self.email = d['email']
+            self.name = d['name']
+            self.key = d['key']
+        except Exception as e:
+            self.better_RequestError("Error loading credentials", e)
 
-    async def register(
-            self,
-            vendor_lock: bool = False,
-            low_quality: bool = False):
-        self.name = generate_random_string(
-            10) if not self.forced_name else self.forced_name
+    def better_RequestError(self, message, error=None):
+        m = f"{message}: {str(error)} {type(error).__name__}"
+        m += f" name: {self.name}, email: {self.email}, key: {self.key},"
+        m += f" address: {self.client.base_url}"
+        self.logger.error(m)
+        if any(isinstance(error, e) for e in [ConnectTimeout, NetworkError, PoolTimeout]):
+            raise OfflineException(f"{message}")
+        else:
+            raise MumbleException(f"{message}")
+
+    def better_logger_info(self, message):
+        m = f"{message}: name: {self.name}, email: {self.email}, key: {self.key},"
+        m += f" address: {self.client.base_url}"
+        self.logger.info(m)
+
+    async def register(self, vendor_lock=False, low_quality=False):
+        # generate data to register
+        if self.forced_name:
+            self.name = self.forced_name
+        else:
+            self.name = generate_random_string(10)
         self.email = self.name + "@" + generate_random_string(10) + ".scam"
         data = {'email': self.email, 'name': self.name}
         if vendor_lock:
@@ -58,182 +72,122 @@ class InteractionManager:
         if low_quality:
             data['never_full'] = 'on'
 
-        self.logger.info(f"Registering with {data}")
+        # register
         try:
-            for i in range(retry):
-                try:
-                    r = await self.client.post(self.address + 'sign-up', data=data)
-                    break
-                except:
-                    self.logger.info(f"Retrying registration {i}")
+            r = await self.client.post('/sign-up', data=data)
         except Exception as e:
-            self.logger.error(
-                f"Error registering: {data} ip: {self.address + 'sign-up'}, error: {e}")
-            raise MumbleException("Error registering")
+            self.better_RequestError("Error registering", e)
+
+        # download key
         try:
-            for i in range(retry):
-                try:
-                    r = await self.client.post(self.address + 'download_key')
-                    break
-                except:
-                    self.logger.info(f"Retrying key download {i}")
+            r = await self.client.post('/download_key')
         except Exception as e:
-            self.logger.error(
-                f"Error downloading key {data}, ip: {self.address + 'download_key'}, error: {e}")
-            raise MumbleException("Error downloading key")
+            self.better_RequestError("Error downloading private key", e)
+        # save key
         self.key = r.content
-        self.logger.info(f"Registration Key: {r.content}")
-        return r.content
+        self.better_logger_info("Registered")
 
     async def login(self):
         data = {'email': self.email, 'name': self.name}
         files = {'file': self.key}
-        self.logger.info(f"Logging in with {data} and {files}")
         try:
-            for i in range(retry):
-                try:
-                    r = await self.client.post(
-                        self.address + 'login',
-                        data=data,
-                        files=files,
-                        follow_redirects=True)
-                    self.logger.info(f"Login response: {r.content.decode()}")
-                    break
-                except:
-                    self.logger.info(f"Retrying login {i}")
+            r = await self.client.post('/login', data=data, files=files, follow_redirects=True)
         except Exception as e:
-            self.logger.error(
-                f"Error logging in: {data}, ip: {self.address + 'login'}, error: {e}")
-            if success_login not in r.content.decode():
-                raise MumbleException("Error logging in, invalid credentials")
-            raise MumbleException("Error logging in response invalid")
-        return r
+            self.better_RequestError("Error logging in", e)
+        # validate success
+        if success_login not in r.content.decode():
+            self.better_RequestError("Error logging in, wrong credentials")
+        self.better_logger_info("Logged in")
 
     async def upload_image(self, image: bytes):
         files = {'file': image}
-        self.logger.info(
-            f"Uploading image to profile: {self.email} flag: {image}")
         try:
-            for i in range(retry):
-                try:
-                    r = await self.client.post(
-                        self.address + 'profile_' + self.email, files=files)
-                    break
-                except:
-                    self.logger.info(f"Retrying image upload {i}")
+            await self.client.post('/profile_' + self.email, files=files)
         except Exception as e:
-            self.logger.error(
-                f"Error uploading image {self.email}, ip: {self.address + 'profile_' + self.email}, error: {e}")
-            raise MumbleException("Error uploading image")
-        return
+            self.better_RequestError("Error uploading image", e)
+        self.better_logger_info("Uploaded image")
 
     async def download_profile_images_from_self(self):
         return await self.download_profile_images_from_email(self.email)
 
     async def download_profile_images_from_email(self, email):
         imgs = await self.get_profile_image_urls(email)
-        for index, e in enumerate(imgs):
+        for index, img_path in enumerate(imgs):
             try:
-                for i in range(retry):
-                    try:
-                        r = await self.client.get(self.address + e)
-                        break
-                    except:
-                        self.logger.info(f"Retrying image download {i}")
-
+                r = await self.client.get(img_path)
+                imgs[index] = Image.open(io.BytesIO(r.content))
             except Exception as e:
-                self.logger.error(
-                    f"Error downloading image {e}, ip: {self.address}, error: {e}")
-                raise MumbleException("Error downloading image")
-            imgs[index] = Image.open(io.BytesIO(r.content))
-        self.logger.info(f"Images decoded {imgs}")
+                self.better_RequestError("Error downloading image", e)
 
+        self.better_logger_info(f"Downloaded {len(imgs)} images from {email}")
         return imgs
 
     async def get_profile_image_urls(self, email):
-        self.logger.info(
-            f"Downloading profile of {email}, url: {self.address + 'profile_' + email}")
         try:
-            for i in range(retry):
-                try:
-                    r = await self.client.get(self.address + 'profile_' +
-                                              email, follow_redirects=True)
-                    break
-                except:
-                    self.logger.info(f"Retrying profile download {i}")
-
+            r = await self.client.get('/profile_' + email)
         except Exception as e:
-            self.logger.error(
-                f"Error downloading profile {email}, ip: {self.address + 'profile_' + email}, error: {e}")
-            raise MumbleException("Error downloading profile")
-        self.logger.info(f"Profile downloaded: {r.content.decode()}")
-        soup = BeautifulSoup(r.content.decode(), 'html.parser')
-        imgs = soup.find_all('img')
-        imgs = [img['src'] for img in imgs]
-        imgs = [img for img in imgs if 'uploads/' in img]
-        self.logger.info(f"Found images: {imgs}")
+            self.better_RequestError("Error getting profile", e)
+        try:
+            soup = BeautifulSoup(r.content.decode(), 'html.parser')
+            imgs = soup.find_all('img')
+            imgs = [img['src'] for img in imgs]
+            imgs = [img for img in imgs if 'uploads/' in img]
+        except Exception as e:
+            self.better_RequestError("Error decoding profile", e)
+        if len(imgs) == 0:
+            self.better_RequestError("No images found in profile")
+
+        self.better_logger_info(f"Found images: {imgs}")
         return imgs
 
-    async def export_image_url(
-            self,
-            url,
-            algorithm=".key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC)"):
+    async def export_image_url(self, url, algorithm=None):
+        if algorithm is None:
+            algorithm = ".key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC)"
         # algorithm = ".kdf_rounds(50000).key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC).hmac_hash(hashes.SHA1())"
-        # algorithm = ".key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC)"
+
         password = generate_random_string(10)
         pure_img = url.split('/')[-1]
         data = {'encryption_algorithm': algorithm,
                 'password': password, 'img': pure_img}
         file = {'private_key': self.key}
-        self.logger.info(f"Exporting image {url} with {data}")
+
         try:
-            for i in range(retry):
-                try:
-                    r = await self.client.post(self.address + 'export_' +
-                                               pure_img, data=data, files=file)
-                    self.logger.info(f"Export post response: {r.content}")
-                    break
-                except:
-                    self.logger.info(f"Retrying export {i}")
+            await self.client.post(f'/export_{pure_img}', data=data, files=file)
         except Exception as e:
-            self.logger.error(
-                f"Error exporting image {url}, ip: {self.address + 'export'} , error: {e}")
-            raise MumbleException("Error exporting image")
+            self.better_RequestError("Error exporting image", e)
 
         try:
-            for i in range(retry):
-                try:
-                    r = await self.client.get(self.address + '/download_image')
-                    self.logger.info(f"Exported image response: {r.content}")
-                    break
-                except:
-                    self.logger.info(f"Retrying download {i}")
-        except:
-            raise MumbleException("Error downloading exported image")
+            r = await self.client.get('/download_image')
+        except Exception as e:
+            self.better_RequestError("Error downloading exported image", e)
 
         try:
-            Image.open(io.BytesIO(r.content))
-        except:
-            raise MumbleException("Error decoding exported image")
+            r = Image.open(io.BytesIO(r.content))
+        except Exception as e:
+            self.better_RequestError("Error decoding exported image", e)
 
-        return Image.open(io.BytesIO(r.content))
-
-    def dump_info(self):
-        self.logger.info(
-            f"Dumping info: {self.email}, {self.name}, {self.key}")
-        return {'email': self.email, 'name': self.name, 'key': self.key}
+        self.better_logger_info("Exported image")
+        return r
 
     async def get_home_page(self):
-        self.logger.info("Getting home page")
         try:
-            for i in range(retry):
-                try:
-                    r = await self.client.get(self.address, follow_redirects=True)
-                    break
-                except:
-                    self.logger.info(f"Retrying home page {i}")
+            r = await self.client.get("/", follow_redirects=True)
         except Exception as e:
-            self.logger.error(
-                f"Error getting home page {self.address} , error: {e}")
-            raise MumbleException("Error getting home page")
+            self.better_RequestError("Error getting home page", e)
         return r.content
+
+    async def logout(self):
+        try:
+            await self.client.get('/logout')
+            self.logger.info("Logged out")
+        except Exception as e:
+            self.better_RequestError("Error logging out", e)
+
+    async def dump_info(self):
+        d = {'email': self.email, 'name': self.name, 'key': self.key}
+        try:
+            await self.db.set("credentials", d)
+        except Exception as e:
+            self.logger.error(f"Error dumping info into db {e}")
+            raise InternalErrorException("Error dumping info into db")
+        return d

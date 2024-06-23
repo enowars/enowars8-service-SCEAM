@@ -10,12 +10,14 @@ from enochecker3 import (
     PutnoiseCheckerTaskMessage,
     GetnoiseCheckerTaskMessage,
     HavocCheckerTaskMessage,
-    OfflineException
+    OfflineException,
+    InternalErrorException
 )
 from typing import Optional
 from utils import InteractionManager, generate_random_string
 from bs4 import BeautifulSoup
 import qr_codes
+from httpx import AsyncClient
 
 SERVICE_PORT = 8008
 checker = Enochecker("enoft", 8008)
@@ -29,31 +31,18 @@ CORE_ONLY = False
 async def putflag_email(
     task: PutflagCheckerTaskMessage,
     db: ChainDB,
-    logger: LoggerAdapter
+    logger: LoggerAdapter,
+    client: AsyncClient
 ) -> None:
+    logger.info(f"Putting flag 0 {client.base_url}")
     flag = task.flag
     qrCode = qr_codes.create_qr_code(flag)
-    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = None
-    try:
-        m = InteractionManager(address, logger)
-        await m.ping()
-    except:
-        raise OfflineException("Service unreachable/invalid")
-    try:
-        await m.register(vendor_lock=True)
-    except:
-        raise MumbleException("Error registering")
-    try:
-        await m.upload_image(qrCode)
-    except:
-        raise MumbleException("Error depositing flag")
-    data = m.dump_info()
-    try:
-        await db.set("credentials", data)
-    except:
-        raise MumbleException("Error saving data")
-
+    m = InteractionManager(db, logger, client)
+    await m.register(vendor_lock=True)
+    await m.upload_image(qrCode)
+    await m.logout()
+    data = await m.dump_info()
+    logger.info(f"Put flag 0 {client.base_url}")
     return data["email"]
 
 
@@ -61,70 +50,41 @@ async def putflag_email(
 async def getflag_email(
     task: GetflagCheckerTaskMessage,
     db: ChainDB,
-    logger: LoggerAdapter
+    logger: LoggerAdapter,
+    client: AsyncClient
 ) -> None:
-    logger.info("Getting flag")
-    try:
-        credentials = await db.get("credentials")
-    except:
-        logger.error("No credentials saved in db")
-        raise MumbleException("Put failed")
-
-    logger.info(f"Got credentials: {credentials}")
-    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = None
-    try:
-        m = InteractionManager(address, logger, email_name_key=credentials)
-        await m.ping()
-    except:
-        raise OfflineException("Service unreachable/invalid")
-
-    try:
-        await m.login()
-    except:
-        raise MumbleException("Error logging in")
-    try:
-        imgs = await m.download_profile_images_from_self()
-    except:
-        raise MumbleException("Error getting profile")
-    if not imgs:
-        raise MumbleException("No images found")
-    logger.info(f"Downloaded {len(imgs)} images")
+    logger.info(f"Getting flag 0 {client.base_url}")
+    m = InteractionManager(db, logger, client)
+    await m.load_db()
+    await m.login()
+    imgs = await m.download_profile_images_from_self()
     imgs = [qr_codes.read_qr_code(img) for img in imgs]
-    logger.info(f"Decoded images: {imgs}")
-    assert_in(task.flag, imgs, "Flag not found in images")
+    if task.flag not in imgs:
+        logger.error(
+            f"Flag not found in images {task.flag} {imgs} {client.base_url}")
+        raise MumbleException("Flag not found in profile")
+    await m.logout()
+    logger.info(f"Got flag 0 {client.base_url}")
 
 
 @checker.exploit(0)
 async def exploit_email(
     task: ExploitCheckerTaskMessage,
-    searcher: FlagSearcher,
-    logger: LoggerAdapter
+    logger: LoggerAdapter,
+    client: AsyncClient
 ) -> Optional[str]:
     logger.info(f"Exploiting {task.attack_info} ")
     email = task.attack_info
     name = email + "("
-    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = None
-    try:
-        m = InteractionManager(address, logger, forced_name=name)
-        await m.ping()
-    except:
-        raise OfflineException("Service unreachable/invalid")
-
-    try:
-        await m.register()
-    except:
-        raise MumbleException("Error registering")
-    try:
-        imgs = await m.download_profile_images_from_email(email)
-    except:
-        raise MumbleException("Error getting profile")
+    m = InteractionManager(None, logger, client, name)
+    await m.register()
+    imgs = await m.download_profile_images_from_email(email)
+    imgs = [qr_codes.read_qr_code(img) for img in imgs]
+    imgs = [img for img in imgs if img]
     if not imgs:
         raise MumbleException("No images found")
-    logger.info(f"Downloaded {len(imgs)} images")
-    imgs = [qr_codes.read_qr_code(img) for img in imgs]
-    logger.info(f"Decoded images: {imgs}")
+    await m.logout()
+    logger.info(f"Exploited {task.attack_info} ")
     return imgs[0]
 
 
@@ -132,32 +92,18 @@ async def exploit_email(
 async def putflag_export(
     task: PutflagCheckerTaskMessage,
     db: ChainDB,
-    logger: LoggerAdapter
+    logger: LoggerAdapter,
+    client: AsyncClient
 ) -> None:
+    logger.info(f"Putting flag 1 {client.base_url}")
     flag = task.flag
     qrCode = qr_codes.create_qr_code(flag)
-    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = None
-    try:
-        m = InteractionManager(address, logger)
-        await m.ping()
-    except:
-        raise OfflineException("Service unreachable/invalid")
-
-    try:
-        await m.register(low_quality=True)
-    except:
-        raise MumbleException("Error registering")
-
-    try:
-        await m.upload_image(qrCode)
-    except:
-        raise MumbleException("Error depositing flag")
-    data = m.dump_info()
-    try:
-        await db.set("credentials", data)
-    except:
-        raise MumbleException("Error saving data")
+    m = InteractionManager(db, logger, client)
+    await m.register(low_quality=True)
+    await m.upload_image(qrCode)
+    await m.logout()
+    data = await m.dump_info()
+    logger.info(f"Put flag 1 {client.base_url}")
     return data["email"]
 
 
@@ -165,74 +111,36 @@ async def putflag_export(
 async def getflag_export(
     task: GetflagCheckerTaskMessage,
     db: ChainDB,
-    logger: LoggerAdapter
+    logger: LoggerAdapter,
+    client: AsyncClient
 ) -> None:
-    logger.info("Getting flag")
-    try:
-        credentials = await db.get("credentials")
-    except:
-        raise MumbleException("No credentials saved in db")
-    logger.info(f"Got credentials: {credentials}")
-    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = None
-    try:
-        m = InteractionManager(address, logger, email_name_key=credentials)
-        await m.ping()
-    except:
-        raise OfflineException("Service unreachable/invalid")
-
-    try:
-        await m.login()
-    except:
-        raise MumbleException("Error logging in")
-    try:
-        imgs = await m.get_profile_image_urls(credentials["email"])
-    except:
-        raise MumbleException("Error getting profile")
-    if not imgs:
-        raise MumbleException("No images found")
-    logger.info(f"Got {len(imgs)} images")
+    logger.info(f"Getting flag 1 {client.base_url}")
+    m = InteractionManager(db, logger, client)
+    await m.load_db()
+    await m.login()
+    imgs = await m.get_profile_image_urls(m.email)
     img_url = imgs[0]
-    try:
-        img = await m.export_image_url(img_url)
-    except:
-        raise MumbleException("Error exporting image")
-    if not img:
-        logger.error("Image not exported")
-        raise MumbleException("No images found")
+    img = await m.export_image_url(img_url)
     flag = qr_codes.read_qr_code(img)
-    logger.info(f"Decoded image: {flag}")
-    assert_equals(task.flag, flag, "Flag not found in image")
+    assert_equals(task.flag, flag, "Export failed")
+    await m.logout()
+    logger.info(f"Got flag 1 {client.base_url}")
 
 
 @checker.exploit(1)
 async def exploit_export(
     task: ExploitCheckerTaskMessage,
-    searcher: FlagSearcher,
-    logger: LoggerAdapter
+    logger: LoggerAdapter,
+    client: AsyncClient
 ) -> Optional[str]:
     logger.info(f"Exploiting {task.attack_info} ")
     email = task.attack_info
-    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = None
-    try:
-        m = InteractionManager(address, logger)
-        await m.ping()
-    except:
-        raise OfflineException("Service unreachable/invalid")
+
+    m = InteractionManager(None, logger, client)
     await m.register()
     urls = await m.get_profile_image_urls(email)
-    if not urls:
-        raise MumbleException("No images found")
-    logger.info(f"Got {len(urls)} images")
     img_url = urls[0]
-    try:
-        img = await m.export_image_url(img_url, ".hmac_hash(hashes.SHA1())")
-    except:
-        raise MumbleException("Error exporting image")
-    if not img:
-        logger.error("Image not exported")
-        raise MumbleException("No images found")
+    img = await m.export_image_url(img_url, ".hmac_hash(hashes.SHA1())")
     flag = qr_codes.read_qr_code(img)
     logger.info(f"Decoded image: {flag}")
     return flag
@@ -242,177 +150,122 @@ async def exploit_export(
 async def putnoise_0(
     task: PutnoiseCheckerTaskMessage,
     db: ChainDB,
-    logger: LoggerAdapter
+    logger: LoggerAdapter,
+    client: AsyncClient
 ):
     if CORE_ONLY:
         return
+    logger.info(f"Putting noise 0 {client.base_url}")
     random_string = generate_random_string(20)
-    await db.set("random_string", random_string)
-    logger.info("Putting noise")
-    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = None
     try:
-        m = InteractionManager(address, logger)
-        await m.ping()
+        await db.set("random_string", random_string)
     except:
-        raise OfflineException("Service unreachable/invalid")
-    try:
-        await m.register(vendor_lock=True)
-    except:
-        raise MumbleException("Error registering")
-
-    try:
-        await m.upload_image(qr_codes.create_qr_code(random_string))
-    except:
-        raise MumbleException("Error uploading image")
-    logger.info("Noise put")
-    data = m.dump_info()
-    try:
-        await db.set("credentials", data)
-    except:
-        raise MumbleException("Error saving data")
+        raise InternalErrorException("Error saving data")
+    qrCode = qr_codes.create_qr_code(random_string)
+    m = InteractionManager(db, logger, client)
+    await m.register(vendor_lock=True)
+    await m.upload_image(qrCode)
+    await m.logout()
+    data = await m.dump_info()
+    logger.info(f"Put noise 0 {client.base_url}")
+    return data["email"]
 
 
 @checker.getnoise(0)
 async def getnoise_0(
-    task: GetnoiseCheckerTaskMessage, db: ChainDB, logger: LoggerAdapter
+    task: GetnoiseCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter,
+    client: AsyncClient
 ):
     if CORE_ONLY:
         return
-    logger.info("Getting noise")
+    logger.info(f"Getting noise 0 {task.address}")
     try:
-        credentials = await db.get("credentials")
+        noise = await db.get("random_string")
     except:
-        raise MumbleException("No credentials saved in db")
-    noise = await db.get("random_string")
-    logger.info(f"Got credentials: {credentials}")
-    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = None
-    try:
-        m = InteractionManager(address, logger, email_name_key=credentials)
-        await m.ping()
-    except:
-        raise OfflineException("Service unreachable/invalid")
-    try:
-        await m.login()
-    except:
-        raise MumbleException("Error logging in")
-    try:
-        imgs = await m.download_profile_images_from_self()
-    except:
-        raise MumbleException("Error getting profile")
-    if not imgs:
-        raise MumbleException("No images found")
-    logger.info(f"Downloaded {len(imgs)} images")
+        raise MumbleException("No noise saved in db")
+    m = InteractionManager(db, logger, client)
+    await m.load_db()
+    await m.login()
+    imgs = await m.download_profile_images_from_self()
     imgs = [qr_codes.read_qr_code(img) for img in imgs]
-    logger.info(f"Decoded images: {imgs}")
     assert_in(noise, imgs, "Noise not found in images")
+    await m.logout()
+    logger.info(f"Got noise 0 {task.address}")
 
 
 @checker.putnoise(1)
 async def putnoise_1(
     task: PutnoiseCheckerTaskMessage,
     db: ChainDB,
-    logger: LoggerAdapter
+    logger: LoggerAdapter,
+    client: AsyncClient
 ):
     if CORE_ONLY:
         return
+    logger.info(f"Putting noise 1 {client.base_url}")
     random_string = generate_random_string(25)
-    await db.set("random_string", random_string)
-    logger.info("Putting noise")
-    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = None
     try:
-        m = InteractionManager(address, logger)
-        await m.ping()
+        await db.set("random_string", random_string)
     except:
-        raise OfflineException("Service unreachable/invalid")
-    try:
-        await m.register(low_quality=True)
-    except:
-        raise MumbleException("Error registering")
-
-    try:
-        await m.upload_image(qr_codes.create_qr_code(random_string))
-    except:
-        raise MumbleException("Error uploading image")
-    logger.info("Noise put")
-    data = m.dump_info()
-    try:
-        await db.set("credentials", data)
-    except:
-        raise MumbleException("Error saving data")
+        raise InternalErrorException("Error saving data")
+    qrCode = qr_codes.create_qr_code(random_string)
+    m = InteractionManager(db, logger, client)
+    await m.register(low_quality=True)
+    await m.upload_image(qrCode)
+    await m.logout()
+    data = await m.dump_info()
+    logger.info(f"Put noise 1 {client.base_url}")
+    return data["email"]
 
 
 @checker.getnoise(1)
 async def getnoise_1(
-    task: GetnoiseCheckerTaskMessage, db: ChainDB, logger: LoggerAdapter
+    task: GetnoiseCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter,
+    client: AsyncClient
 ):
     if CORE_ONLY:
         return
-    logger.info("Getting noise")
+    logger.info(f"Getting noise 1 {task.address}")
     try:
-        credentials = await db.get("credentials")
+        noise = await db.get("random_string")
     except:
-        raise MumbleException("No credentials saved in db")
-    noise = await db.get("random_string")
-    logger.info(f"Got credentials: {credentials}")
-    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = None
-    try:
-        m = InteractionManager(address, logger, email_name_key=credentials)
-        await m.ping()
-    except:
-        raise OfflineException("Service unreachable/invalid")
-
-    try:
-        await m.login()
-    except:
-        raise MumbleException("Error logging in")
-    try:
-        imgs = await m.get_profile_image_urls(credentials["email"])
-    except:
-        raise MumbleException("Error getting profile")
-    if not imgs:
-        raise MumbleException("No images found")
-    logger.info(f"Got {len(imgs)} images")
+        raise MumbleException("No noise saved in db")
+    m = InteractionManager(db, logger, client)
+    await m.load_db()
+    await m.login()
+    imgs = await m.get_profile_image_urls(m.email)
     img_url = imgs[0]
-    try:
-        img = await m.export_image_url(img_url)
-    except:
-        raise MumbleException("Error exporting image")
-    if not img:
-        logger.error("Image not exported")
-        raise MumbleException("No images found")
+    img = await m.export_image_url(img_url)
     flag = qr_codes.read_qr_code(img)
-    logger.info(f"Decoded image: {flag}")
     assert_equals(noise, flag, "Noise not found in image")
+    await m.logout()
+    logger.info(f"Got noise 1 {task.address}")
 
 
 @checker.havoc(0)
-async def havoc_0(task: HavocCheckerTaskMessage, logger: LoggerAdapter):
+async def havoc_0(
+    task: HavocCheckerTaskMessage,
+    logger: LoggerAdapter,
+    client: AsyncClient
+):
     if CORE_ONLY:
         return
-    logger.info("Havoc")
-    address = "http://" + task.address + ":" + str(SERVICE_PORT) + "/"
-    m = None
-    try:
-        m = InteractionManager(address, logger)
-        await m.ping()
-    except:
-        raise OfflineException("Service unreachable/invalid")
-    try:
-        main = await m.get_home_page()
-    except:
-        raise OfflineException("Service unreachable/invalid")
+    logger.info(f"Havoc 0 {task.address}")
+    m = InteractionManager(None, logger, client)
+    await m.register()
+    main = await m.get_home_page()
     soup = BeautifulSoup(main, "html.parser")
     imgs = soup.find_all("img")
     imgs = [img["src"] for img in imgs]
     if not imgs:
-        raise MumbleException("No images found")
-    logger.info(f"Found images: {imgs}")
+        raise MumbleException("Homepage broken")
     if "/static/logo.png" not in imgs:
-        raise MumbleException("Logo not found")
+        raise MumbleException("Homepage broken")
+    await m.logout()
 
 
 if __name__ == "__main__":
