@@ -1,0 +1,2 @@
+- nearest resampling is absolutely lossy and completely removes the flag
+- idea is to use nearest resampling as a middle step between the always lossy and 3rd vuln with reversible blurring
