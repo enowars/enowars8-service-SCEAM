@@ -12,7 +12,7 @@ from qreader import QReader
 
 RETRIES = 3
 SCALE = 12
-BORDER = 20
+BORDER = 50
 background_folder = os.path.join(os.path.dirname(__file__), "backgrounds")
 qrReader = QReader()
 
