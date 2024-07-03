@@ -20,3 +20,5 @@ class ENOFT(db.Model):
     certificate = db.Column(db.String(10000))
     owner_email = db.Column(db.Integer, db.ForeignKey('user.email'))
     creation_date = db.Column(db.DateTime(timezone=True), default=func.now())
+    profile_image = db.Column(db.Boolean, default=False)
+    description = db.Column(db.String(10000), default='Look at my new ENOFT!')

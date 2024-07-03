@@ -76,10 +76,21 @@ class ENOFT_creator:
             current_app.config["FULL_IMAGE_UPLOADS"], file_name)
         certificate = build_cert(self.img)
         self.img.save(full_save_path)
+        description = 'Look at my new ENOFT!'
+        if description := request.form.get('description'):
+            description = description[:10000]
+        profile_image = False
+        if profile_image := request.form.get('is_profile'):
+            profile_image = True
+            # unset previous profile image
+            ENOFT.query.filter_by(owner_email=current_user.email, profile_image=True).update(
+                {ENOFT.profile_image: False})
         new_enoft = ENOFT(
             image_path=file_name,
             certificate=certificate,
-            owner_email=current_user.email)
+            owner_email=current_user.email,
+            description=description,
+            profile_image=profile_image)
         db.session.add(new_enoft)
         db.session.commit()
         self.img.close()

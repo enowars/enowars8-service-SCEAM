@@ -6,6 +6,25 @@
   {% for img in images %}
   <div class="list-group-item">
     <a href="profile_{{img[1]}}">
+      <div class="login_holder" style="margin: 5px">
+        <img
+          src="/pimage_{{img[1]}}"
+          alt="Profile Image"
+          width="90"
+          height="90"
+        />
+        <div
+          style="
+            color: lightgrey;
+            margin: 5px;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+          "
+        >
+          {{img[2]}}
+        </div>
+      </div>
       <img
         src="uploads/{{ img[0] }}"
         alt="image"

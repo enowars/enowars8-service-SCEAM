@@ -88,6 +88,55 @@ async def exploit_email(
     return imgs[0]
 
 
+@checker.putnoise(0)
+async def putnoise_0(
+    task: PutnoiseCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter,
+    client: AsyncClient
+):
+    if CORE_ONLY:
+        return
+    logger.info(f"Putting noise 0 {client.base_url}")
+    random_string = generate_random_string(20)
+    try:
+        await db.set("random_string", random_string)
+    except:
+        raise InternalErrorException("Error saving data")
+    qrCode = qr_codes.create_qr_code(random_string)
+    m = InteractionManager(db, logger, client)
+    await m.register(vendor_lock=True, quality='1')
+    await m.upload_image(qrCode)
+    await m.logout()
+    data = await m.dump_info()
+    logger.info(f"Put noise 0 {client.base_url}")
+    return data["email"]
+
+
+@checker.getnoise(0)
+async def getnoise_0(
+    task: GetnoiseCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter,
+    client: AsyncClient
+):
+    if CORE_ONLY:
+        return
+    logger.info(f"Getting noise 0 {task.address}")
+    try:
+        noise = await db.get("random_string")
+    except:
+        raise MumbleException("No noise saved in db")
+    m = InteractionManager(db, logger, client)
+    await m.load_db()
+    await m.login()
+    imgs = await m.download_profile_images_from_self()
+    imgs = [qr_codes.read_qr_code(img) for img in imgs]
+    assert_in(noise, imgs, "Noise not found in images")
+    await m.logout()
+    logger.info(f"Got noise 0 {task.address}")
+
+
 @checker.putflag(1)
 async def putflag_export(
     task: PutflagCheckerTaskMessage,
@@ -146,55 +195,6 @@ async def exploit_export(
     return flag
 
 
-@checker.putnoise(0)
-async def putnoise_0(
-    task: PutnoiseCheckerTaskMessage,
-    db: ChainDB,
-    logger: LoggerAdapter,
-    client: AsyncClient
-):
-    if CORE_ONLY:
-        return
-    logger.info(f"Putting noise 0 {client.base_url}")
-    random_string = generate_random_string(20)
-    try:
-        await db.set("random_string", random_string)
-    except:
-        raise InternalErrorException("Error saving data")
-    qrCode = qr_codes.create_qr_code(random_string)
-    m = InteractionManager(db, logger, client)
-    await m.register(vendor_lock=True, quality='1')
-    await m.upload_image(qrCode)
-    await m.logout()
-    data = await m.dump_info()
-    logger.info(f"Put noise 0 {client.base_url}")
-    return data["email"]
-
-
-@checker.getnoise(0)
-async def getnoise_0(
-    task: GetnoiseCheckerTaskMessage,
-    db: ChainDB,
-    logger: LoggerAdapter,
-    client: AsyncClient
-):
-    if CORE_ONLY:
-        return
-    logger.info(f"Getting noise 0 {task.address}")
-    try:
-        noise = await db.get("random_string")
-    except:
-        raise MumbleException("No noise saved in db")
-    m = InteractionManager(db, logger, client)
-    await m.load_db()
-    await m.login()
-    imgs = await m.download_profile_images_from_self()
-    imgs = [qr_codes.read_qr_code(img) for img in imgs]
-    assert_in(noise, imgs, "Noise not found in images")
-    await m.logout()
-    logger.info(f"Got noise 0 {task.address}")
-
-
 @checker.putnoise(1)
 async def putnoise_1(
     task: PutnoiseCheckerTaskMessage,
@@ -244,6 +244,116 @@ async def getnoise_1(
     assert_equals(noise, flag, "Noise not found in image")
     await m.logout()
     logger.info(f"Got noise 1 {task.address}")
+
+
+@checker.putflag(2)
+async def putflag_blur(
+    task: PutflagCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter,
+    client: AsyncClient
+) -> None:
+    logger.info(f"Putting flag 2 {client.base_url}")
+    flag = task.flag
+    qrCode = qr_codes.create_qr_code(flag)
+    m = InteractionManager(db, logger, client)
+    await m.register(vendor_lock=True, quality='2')
+    await m.upload_image(qrCode)
+    await m.logout()
+    data = await m.dump_info()
+    logger.info(f"Put flag 2 {client.base_url}")
+    return data["email"]
+
+
+@checker.getflag(2)
+async def getflag_blur(
+    task: GetflagCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter,
+    client: AsyncClient
+) -> None:
+    logger.info(f"Getting flag 2 {client.base_url}")
+    m = InteractionManager(db, logger, client)
+    await m.load_db()
+    await m.login()
+    imgs = await m.download_profile_images_from_self()
+    imgs = [qr_codes.read_qr_code(img) for img in imgs]
+    if task.flag not in imgs:
+        logger.error(
+            f"Flag not found in images {task.flag} {imgs} {client.base_url}")
+        raise MumbleException("Flag not found in profile")
+    await m.logout()
+    logger.info(f"Got flag 2 {client.base_url}")
+
+
+@checker.exploit(2)
+async def exploit_blur(
+    task: ExploitCheckerTaskMessage,
+    logger: LoggerAdapter,
+    client: AsyncClient
+) -> Optional[str]:
+    logger.info(f"Exploiting {task.attack_info} ")
+    email = task.attack_info
+    name = email + "("
+    m = InteractionManager(None, logger, client, name)
+    await m.register(0)
+    imgs = await m.download_profile_images_from_email(email)
+    imgs = [qr_codes.read_qr_code(img) for img in imgs]
+    imgs = [img for img in imgs if img]
+    if not imgs:
+        raise MumbleException("No images found")
+    await m.logout()
+    logger.info(f"Exploited {task.attack_info} ")
+    return imgs[0]
+
+
+@checker.putnoise(2)
+async def putnoise_2(
+    task: PutnoiseCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter,
+    client: AsyncClient
+):
+    if CORE_ONLY:
+        return
+    logger.info(f"Putting noise 2 {client.base_url}")
+    random_string = generate_random_string(20)
+    try:
+        await db.set("random_string", random_string)
+    except:
+        raise InternalErrorException("Error saving data")
+    qrCode = qr_codes.create_qr_code(random_string)
+    m = InteractionManager(db, logger, client)
+    await m.register(vendor_lock=True, quality='2')
+    await m.upload_image(qrCode)
+    await m.logout()
+    data = await m.dump_info()
+    logger.info(f"Put noise 2 {client.base_url}")
+    return data["email"]
+
+
+@checker.getnoise(2)
+async def getnoise_2(
+    task: GetnoiseCheckerTaskMessage,
+    db: ChainDB,
+    logger: LoggerAdapter,
+    client: AsyncClient
+):
+    if CORE_ONLY:
+        return
+    logger.info(f"Getting noise 2 {task.address}")
+    try:
+        noise = await db.get("random_string")
+    except:
+        raise MumbleException("No noise saved in db")
+    m = InteractionManager(db, logger, client)
+    await m.load_db()
+    await m.login()
+    imgs = await m.download_profile_images_from_self()
+    imgs = [qr_codes.read_qr_code(img) for img in imgs]
+    assert_in(noise, imgs, "Noise not found in images")
+    await m.logout()
+    logger.info(f"Got noise 2 {task.address}")
 
 
 @checker.havoc(0)

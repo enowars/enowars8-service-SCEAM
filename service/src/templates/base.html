@@ -48,9 +48,16 @@
           <div class="header_installsteam_btn_content">Install Sceam</div>
         </a>
         {% if user.is_authenticated %} &nbsp;
-        <a class="global_action_link disabled" href="/login">login</a>
+        <a class="global_action_link disabled" href="/login" style="color: grey"
+          >login</a
+        >
         &nbsp;|&nbsp;
-        <a class="global_action_link disabled" href="/sign-up">Register</a>
+        <a
+          class="global_action_link disabled"
+          href="/sign-up"
+          style="color: grey"
+          >Register</a
+        >
         &nbsp; &nbsp; {% else %} &nbsp;
         <a class="global_action_link" href="/login">login</a>
         &nbsp;|&nbsp;

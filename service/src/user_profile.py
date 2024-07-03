@@ -11,6 +11,8 @@ from PIL import Image
 from PIL.Image import Resampling
 import numpy as np
 import cv2
+from .auth import valid_keys
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
 DOWNSCALE_FACTOR = 6
 user_profile = Blueprint('user_profile', __name__)
@@ -31,21 +33,17 @@ async def profile(email):
         flash(f"User with email {email} does not exist.", 'error')
         return redirect(url_for('views.home'))
     enofts = ENOFT.query.filter_by(owner_email=user.email).all()
-    file_names = [e.image_path for e in enofts]
+    # (x.image_path, x.owner_email, x.description)
+    images = [(e.image_path, e.owner_email, e.description) for e in enofts]
     name = user.name + " <" + user.email + ">"
-
     logger.info(f"User {name} profile accessed by {session['name']}")
     return render_template(
         "profile.html",
         user=current_user,
-        images=file_names,
+        images=images,
         owned=owned,
-        name=name)
-
-blur_sigma = 6  # Standard deviation for Gaussian kernel
-kernel_size = 15  # Kernel size used for blurring
-kernel_1d = cv2.getGaussianKernel(kernel_size, blur_sigma)
-kernel = np.outer(kernel_1d, kernel_1d.transpose())
+        name=name,
+        email=email)
 
 
 def get_lossy_image_path(path, quality):
@@ -60,16 +58,49 @@ def get_lossy_image_path(path, quality):
             small_image = img.resize(new_size, Resampling.NEAREST)
             small_image.save(lossy_path)
         elif quality == 2:
-            img = np.array(img)
+            blur_sigma = 6  # Standard deviation for Gaussian kernel
+            kernel_size = 15  # Kernel size used for blurring
+            kernel_1d = cv2.getGaussianKernel(kernel_size, blur_sigma)
+            kernel = np.outer(kernel_1d, kernel_1d.transpose())
+            img = np.array(img.convert('RGB'))
             blurred_img = np.zeros_like(img, dtype=np.float32)
             for i in range(3):
                 blurred_img[:, :, i] = cv2.filter2D(img[:, :, i], -1, kernel)
             blurred_img_float = blurred_img.astype(float) / 255.0
-            cv2.imwrite(lossy_path, blurred_img_float)
+            blurred_img_8bit = np.clip(
+                blurred_img_float * 255, 0, 255).astype(np.uint8)
+            cv2.imwrite(lossy_path, cv2.cvtColor(
+                blurred_img_8bit, cv2.COLOR_RGB2BGR))
         elif quality == 3:
             img.save(lossy_path)
 
     return lossy_path
+
+
+@user_profile.route('/pimage_<email>', methods=['POST', 'GET'])
+async def get_profile_image(email):
+    full = False
+    try:
+        private_key = request.files['file'].read()
+        private_key = load_pem_private_key(private_key, password=None)
+        public_key = User.query.filter_by(email=email).first().public_key
+        full = valid_keys(private_key, public_key)
+    except Exception as e:
+        pass
+    image_path = None
+    try:
+        image_path = ENOFT.query.filter_by(
+            owner_email=email, profile_image=True).first().image_path
+        logger.info(f"accessed profile image {image_path}")
+    except Exception as e:
+        logger.info(f"returning default profile image")
+        return send_from_directory('static', 'user-avatar-filled.svg')
+    if full:
+        logger.info(f"returning full profile image")
+        return send_from_directory(current_app.config['FULL_IMAGE_UPLOADS'], image_path)
+    else:
+        logger.info(f"returning lossy profile image")
+        return redirect(url_for('user_profile.uploads', path=image_path))
 
 
 @user_profile.route('/uploads/<path:path>', methods=['GET', 'POST'])
@@ -81,7 +112,7 @@ async def uploads(path):
         session_email = parseaddr(session['name'])[1]
     owned = True if session_email == owner_email else False
     quality = User.query.filter_by(email=owner_email).first().quality
-    if not owned or quality == 0:
+    if not owned or quality in [0, 2]:
         logger.info(
             f"User {session_email} accessed image {path} lossy version")
         get_lossy_image_path(path, quality)

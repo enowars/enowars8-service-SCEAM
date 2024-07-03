@@ -21,7 +21,8 @@ async def page(number):
     if not all_images:
         logger.error("No images found in database.")
         all_images = []
-    all_images = [(x.image_path, x.owner_email) for x in all_images]
+    all_images = [(x.image_path, x.owner_email, x.description)
+                  for x in all_images]
     # check limits
     if number < 1:
         flash('No such page', 'error')

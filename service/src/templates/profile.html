@@ -1,7 +1,12 @@
 {% extends "base.html" %} {% block title %}Profile{% endblock %} {% block
 content %}
 
-<h1 align="center">Profile of {{name}}</h1>
+<div>
+  <h1 align="center">
+    <img src="/pimage_{{email}}" alt="Profile Image" width="90" height="90" />
+    {{name}}
+  </h1>
+</div>
 <div class="center-div-content">
   {% if user.is_authenticated %} {% if owned == true %}
   <div class="form">
@@ -10,30 +15,71 @@ content %}
       action="/profile_{{ user.email }}"
       method="POST"
       enctype="multipart/form-data"
+      style="width: 50%; background-color: rgba(255, 255, 255, 0.05)"
     >
-      <div class="center-div-content">
-        <label for="file">Upload NFT</label>
-        <div class="custom-file-upload">
-          <img
-            src="{{ url_for('static',filename='upload-white.svg') }}"
-            width="100"
-          />
-          <input type="file" class="form-control" id="file" name="file" />
+      <div class="login_holder" style="width: 100%">
+        <div class="login-qr">
+          <div class="center-div-content">
+            <label for="description">Description</label>
+            <input
+              type="text"
+              class="form-control"
+              id="description"
+              name="description"
+              placeholder="Description"
+            />
+            <label for="is_profile">Set as Profile Picture</label>
+            <input
+              type="checkbox"
+              class="form-control"
+              id="is_profile"
+              name="is_profile"
+              style="margin: 10px"
+            />
+            <input type="submit" class="btn btn-primary" />
+          </div>
+        </div>
+        <div class="login-form">
+          <div class="center-div-content">
+            <label for="file">Upload NFT</label>
+            <div class="custom-file-upload">
+              <img
+                src="{{ url_for('static',filename='upload-white.svg') }}"
+                width="100"
+              />
+              <input type="file" class="form-control" id="file" name="file" />
+            </div>
+          </div>
         </div>
       </div>
-      <input type="submit" class="btn btn-primary" />
     </form>
   </div>
   {% endif %} {% endif %}
 
   <div class="list-group list-group-flush center-div-content" id="ENOFTs">
-    {% for img_path in images %}
-    <div class="list-group-item center-div-content">
-      <a
-        href="/export_{{ img_path }}"
-        class="btn btn-primary center-div-content"
-      >
-        <img src="uploads/{{ img_path }}" alt="image" style="width: 100%" />
+    {% for img in images %}
+    <div class="list-group-item">
+      <div class="login_holder" style="margin: 5px">
+        <img
+          src="/pimage_{{img[1]}}"
+          alt="Profile Image"
+          width="90"
+          height="90"
+        />
+        <div
+          style="
+            color: lightgrey;
+            margin: 5px;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+          "
+        >
+          {{img[2]}}
+        </div>
+      </div>
+      <a href="/export_{{ img[0] }}" class="btn btn-primary center-div-content">
+        <img src="uploads/{{ img[0] }}" alt="image" style="width: 100%" />
       </a>
     </div>
     {% endfor %}
