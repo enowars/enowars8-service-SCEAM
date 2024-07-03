@@ -9,7 +9,7 @@ class User(db.Model, UserMixin):
     public_key = db.Column(db.String(150))
     name = db.Column(db.String(150))
     enofts = db.relationship('ENOFT')
-    never_full = db.Column(db.Boolean, default=False)
+    quality = db.Column(db.Integer, default=1)
     vendor_lock = db.Column(db.Boolean, default=False)
     creation_date = db.Column(db.DateTime(timezone=True), default=func.now())
 

@@ -1,16 +1,8 @@
 # Use a suitable base-image.
 FROM python:3.12.2-slim
-
-# Create a seperate user and chown new directories if necessary
-# RUN addgroup --system service
-# RUN adduser --system --ingroup service --uid 1000 service
-
-# Create our mapped data volume endpoint
-# RUN mkdir /data/
-
-# Copy our entrypoint.sh and make it executable
-# COPY entrypoint.sh /
-# RUN chmod +x /entrypoint.sh
+RUN apt-get update && apt-get upgrade -y 
+RUN apt-get install libgl1-mesa-glx -y
+RUN apt-get install libglib2.0-0 libsm6 libxext6 libxrender-dev -y
 
 # Copy our service
 COPY requirements.txt /
@@ -20,16 +12,6 @@ COPY cleanup.py /
 COPY entrypoint.sh /
 COPY gunicorn.conf.py /
 RUN chmod +x /entrypoint.sh
-
-# Change the working directory.
-# WORKDIR /service/
-# Expose the service's port
-# EXPOSE 8000
-
-
-
-
-
 COPY src/ /src/
 # Run the service
 ENTRYPOINT ["/entrypoint.sh"]

@@ -70,7 +70,7 @@ class InteractionManager:
             data['vendor_lock'] = 'on'
 
         if low_quality:
-            data['never_full'] = 'on'
+            data['quality'] = 'on'
 
         # register
         try:

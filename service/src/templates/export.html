@@ -10,13 +10,26 @@
             <label for="name" style="color: var(--highlight-blue)"
               >Your custom Encryption Algorithm</label
             >
-            <input
-              type="text"
-              class="form-control"
-              id="encryption_algorithm"
+            <br />
+            <select
               name="encryption_algorithm"
-              placeholder="Enter an Encryption_algorithm"
-            />
+              id="encryption_algorithm"
+              style="width=100%"
+            >
+              <option value="BestAvailableEncryption">
+                Best Available Encryption
+              </option>
+              <option
+                value=".key_cert_algorithm(pkcs12.PBES.PBESv1SHA1And3KeyTripleDESCBC)"
+              >
+                PBESv1SHA1And3KeyTripleDESCBC
+              </option>
+              <option
+                value=".key_cert_algorithm(pkcs12.PBES.PBESv2SHA256AndAES256CBC)"
+              >
+                PBESv2SHA256AndAES256CBC
+              </option>
+            </select>
           </div>
           <div class="form-group">
             <label for="password" style="color: var(--highlight-blue)"

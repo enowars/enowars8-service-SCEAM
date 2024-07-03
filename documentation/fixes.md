@@ -14,7 +14,7 @@ async def uploads(path):
         session_email = parseaddr(session['name'])[1]
         session_name = parseaddr(session['name'])[0]
     owned = True if session_email == owner_email and session_name == owner_name else False
-    force_lossy = User.query.filter_by(email=owner_email).first().never_full
+    force_lossy = User.query.filter_by(email=owner_email).first().quality
     if not owned or force_lossy:
         logger.info(
             f"User {session_email} accessed image {path} lossy version")

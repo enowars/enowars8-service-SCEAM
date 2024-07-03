@@ -9,6 +9,8 @@ from . import logger
 import os
 from PIL import Image
 from PIL.Image import Resampling
+import numpy as np
+import cv2
 
 DOWNSCALE_FACTOR = 6
 user_profile = Blueprint('user_profile', __name__)
@@ -40,17 +42,32 @@ async def profile(email):
         owned=owned,
         name=name)
 
+blur_sigma = 6  # Standard deviation for Gaussian kernel
+kernel_size = 15  # Kernel size used for blurring
+kernel_1d = cv2.getGaussianKernel(kernel_size, blur_sigma)
+kernel = np.outer(kernel_1d, kernel_1d.transpose())
 
-def get_lossy_image_path(path):
+
+def get_lossy_image_path(path, quality):
     lossy_path = os.path.join(current_app.config['LOSSY_IMAGE_UPLOADS'], path)
     if not os.path.exists(lossy_path):
         full_path = os.path.join(
             current_app.config['FULL_IMAGE_UPLOADS'], path)
         img = Image.open(full_path)
-        new_size = (img.size[0] // DOWNSCALE_FACTOR,
-                    img.size[1] // DOWNSCALE_FACTOR)
-        small_image = img.resize(new_size, Resampling.NEAREST)
-        small_image.save(lossy_path)
+        if quality in [0, 1]:
+            new_size = (img.size[0] // DOWNSCALE_FACTOR,
+                        img.size[1] // DOWNSCALE_FACTOR)
+            small_image = img.resize(new_size, Resampling.NEAREST)
+            small_image.save(lossy_path)
+        elif quality == 2:
+            img = np.array(img)
+            blurred_img = np.zeros_like(img, dtype=np.float32)
+            for i in range(3):
+                blurred_img[:, :, i] = cv2.filter2D(img[:, :, i], -1, kernel)
+            blurred_img_float = blurred_img.astype(float) / 255.0
+            cv2.imwrite(lossy_path, blurred_img_float)
+        elif quality == 3:
+            img.save(lossy_path)
 
     return lossy_path
 
@@ -63,11 +80,11 @@ async def uploads(path):
     else:
         session_email = parseaddr(session['name'])[1]
     owned = True if session_email == owner_email else False
-    force_lossy = User.query.filter_by(email=owner_email).first().never_full
-    if not owned or force_lossy:
+    quality = User.query.filter_by(email=owner_email).first().quality
+    if not owned or quality == 0:
         logger.info(
             f"User {session_email} accessed image {path} lossy version")
-        get_lossy_image_path(path)
+        get_lossy_image_path(path, quality)
         return send_from_directory(
             current_app.config['LOSSY_IMAGE_UPLOADS'], path)
     else:

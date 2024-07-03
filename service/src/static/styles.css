@@ -115,14 +115,35 @@ input[type="file"] {
     top: 0;
 }
 
+@keyframes pulse-white {
+	0% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+	}
+	
+	70% {
+		transform: scale(1);
+		box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+	}
+	
+	100% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+	}
+}
+
 .custom-file-upload {
     position: relative;
     overflow: hidden;
     color: var(--main-bg-color);
     background-color: var(--main-bg-color);
+    animation: pulse-white 2s infinite;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 1);
+    border-radius: 30%;
+    
 }
 
-input[type="text"], input[type="password"], input[type="email"], input[type="checkbox"] {
+input[type="text"], input[type="password"], input[type="email"], input[type="checkbox"], select{
     border-radius: 2px;
     color: var(--default-text-color);
     padding: 10px;
@@ -159,7 +180,7 @@ input[type=checkbox]:focus {
 }
 
 
-input[type=text]:focus, input[type=password]:focus, input[type=email]:focus {
+input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, select:focus {
     border-width: 3px;
     color: var(--default-text-color);
     background-color: var(--input-selected-color);

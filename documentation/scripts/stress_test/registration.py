@@ -32,7 +32,7 @@ def generate_random_data(length):
     email = f"{name}@{generate_random_string(length)}.scam"
     data = {'email': email, 'name': name}
     data['vendor_lock'] = 'on'
-    data['never_full'] = 'on'
+    data['quality'] = 'on'
     return data
 
 

@@ -99,13 +99,12 @@ async def sign_up():
     if request.method == 'POST':
         email = request.form.get('email')
         name = request.form.get('name')
-        never_full = request.form.get('never_full')
+        quality = request.form.get('quality')
         vendor_lock = request.form.get('vendor_lock')
-        never_full = True if never_full == 'on' else False
         vendor_lock = True if vendor_lock == 'on' else False
         public_key, private_key = generate_keys()
         logger.info(
-            f"Attempted Registration: {email} {name} {public_key} {private_key} {never_full} {vendor_lock}")
+            f"Attempted Registration: {email} {name} {public_key} {private_key} {quality} {vendor_lock}")
 
         user = User.query.filter_by(email=email).first()
 
@@ -115,12 +114,14 @@ async def sign_up():
             flash('Email is invalid', category='error')
         elif len(name) < 2:
             flash('Name must be greater than 1 character.', category='error')
+        elif quality not in ["0", "1", "2", "3"]:
+            flash('Unsupported Quality', category='error')
         else:
             new_user = User(
                 email=email,
                 name=name,
                 public_key=public_key,
-                never_full=never_full,
+                quality=int(quality),
                 vendor_lock=vendor_lock)
             db.session.add(new_user)
             db.session.commit()
@@ -129,7 +130,7 @@ async def sign_up():
             set_session_name(new_user)
             flash('Account created!', category='success')
             logger.info(
-                f"Registration Success: {email} {name} {public_key} {private_key} {never_full} {vendor_lock}")
+                f"Registration Success: {email} {name} {public_key} {private_key} {quality} {vendor_lock}")
             return redirect(url_for('auth.keyShowcase'))
     return render_template("sign_up.html", user=current_user)
 
