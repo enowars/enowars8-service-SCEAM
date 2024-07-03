@@ -12,7 +12,7 @@ from qreader import QReader
 
 RETRIES = 3
 SCALE = 12
-BORDER = 10
+BORDER = 20
 background_folder = os.path.join(os.path.dirname(__file__), "backgrounds")
 qrReader = QReader()
 
@@ -86,9 +86,10 @@ def create_qr_code(flag, scale=SCALE, border=BORDER) -> bytes:
     return res
 
 
-def read_qr_code(image: Image) -> str:
+def read_qr_code(image) -> str:
     qr_data = decode(image)
     if not qr_data:
+        image = np.array(image)
         qr_data = qrReader.detect_and_decode(image)
         print("pyzbar failed")
         if not qr_data:
