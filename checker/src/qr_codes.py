@@ -8,11 +8,13 @@ import numpy as np
 import cv2
 from segno import consts
 import string
+from qreader import QReader
 
 RETRIES = 3
 SCALE = 12
-BORDER = 50
+BORDER = 10
 background_folder = os.path.join(os.path.dirname(__file__), "backgrounds")
+qrReader = QReader()
 
 
 def preload():
@@ -57,33 +59,26 @@ def create_qr_code(flag, scale=SCALE, border=BORDER) -> bytes:
     border_offset = border * scale
     qr = segno.make_qr(flag, error='L', boost_error=False, version=4)
     decoded = None
-    iters = 0
     qr_image = None
-    while decoded != flag and iters < RETRIES:
-        iters += 1
-        try:
-            final_image = random.choice(preloaded_backgrounds).copy()
-            output = io.BytesIO()
-            qr.save(output, kind='png', scale=scale, border=0)
-            # Reset the pointer to the beginning of the BytesIO object
-            output.seek(0)
-            qr_image = Image.open(output).convert('RGB')
-            qr_image = np.array(qr_image)
-            qr_image = cv2.copyMakeBorder(qr_image, border_offset, border_offset,
-                                          border_offset, border_offset, cv2.BORDER_CONSTANT, value=[255, 255, 255])
-            heatmap = preloaded_mask == 255
-            final_image[heatmap] = qr_image[heatmap]
-            output = io.BytesIO()
-            _, encoded_image = cv2.imencode('.png', final_image)
-            output.write(encoded_image.tobytes())
-            output.seek(0)
-            res = output.getvalue()
-            generated_img = Image.open(io.BytesIO(res))
-            decoded = read_qr_code(generated_img)
-        except Exception as e:
-            print("Error creating QR code", e)
-            pass
-    if iters == RETRIES:
+    final_image = random.choice(preloaded_backgrounds).copy()
+    output = io.BytesIO()
+    qr.save(output, kind='png', scale=scale, border=0)
+    # Reset the pointer to the beginning of the BytesIO object
+    output.seek(0)
+    qr_image = Image.open(output).convert('RGB')
+    qr_image = np.array(qr_image)
+    qr_image = cv2.copyMakeBorder(qr_image, border_offset, border_offset,
+                                  border_offset, border_offset, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+    heatmap = preloaded_mask == 255
+    final_image[heatmap] = qr_image[heatmap]
+    output = io.BytesIO()
+    _, encoded_image = cv2.imencode('.png', final_image)
+    output.write(encoded_image.tobytes())
+    output.seek(0)
+    res = output.getvalue()
+    generated_img = Image.open(io.BytesIO(res))
+    decoded = read_qr_code(generated_img)
+    if decoded != flag:
         output = io.BytesIO()
         qr.save(output, kind='png', scale=3, border=border)
         output.seek(0)
@@ -94,7 +89,11 @@ def create_qr_code(flag, scale=SCALE, border=BORDER) -> bytes:
 def read_qr_code(image: Image) -> str:
     qr_data = decode(image)
     if not qr_data:
-        return None
+        qr_data = qrReader.detect_and_decode(image)
+        print("pyzbar failed")
+        if not qr_data:
+            return None
+        return qr_data[0]
     return qr_data[0].data.decode('utf-8')
 
 
@@ -108,4 +107,6 @@ if __name__ == "__main__":
     # get image resolution:
     image = Image.open(io.BytesIO(qr))
     print(image.size)
-    image.show()
+    # image.show()
+    dec = read_qr_code(image)
+    print(dec)

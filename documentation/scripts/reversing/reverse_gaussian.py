@@ -1,7 +1,9 @@
 import numpy as np
 import cv2
 from skimage import restoration
-
+from pyzbar.pyzbar import decode
+from pyzbar.pyzbar import ZBarSymbol
+from qreader import QReader
 # Parameters
 image_path = r'documentation\scripts\reversing\qr.jpg'  # Path to the input image
 blur_sigma = 6  # Standard deviation for Gaussian kernel
@@ -27,7 +29,7 @@ blurred_img_float = blurred_img.astype(float) / 255.0
 restored_img = np.zeros_like(blurred_img_float)
 for i in range(3):
     # restored_img[:, :, i] = restoration.richardson_lucy(
-    #     blurred_img_float[:, :, i], kernel, num_iter=30)
+    #     blurred_img_float[:, :, i], kernel, num_iter=100)
     restored_img[:, :, i] = restoration.wiener(
         blurred_img_float[:, :, i], kernel, 0.01, clip=False)
 
@@ -37,6 +39,22 @@ restored_img = np.clip(restored_img, 0, 1)
 
 # Convert restored image back to uint8 format for display
 restored_img = (restored_img * 255).astype(np.uint8)
+
+
+def read_qr_code(image) -> str:
+    qr_data = decode(image, symbols=[ZBarSymbol.QRCODE])
+    if not qr_data:
+        return None
+    return qr_data[0].data.decode('utf-8')
+
+
+qr_data = decode(restored_img, symbols=[ZBarSymbol.QRCODE])
+print(qr_data)
+
+
+qreader = QReader()
+decoded_text = qreader.detect_and_decode(image=restored_img)
+print(decoded_text)
 
 cv2.imshow('Restored Image', restored_img)
 cv2.imshow('Original Image', img)
