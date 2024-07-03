@@ -58,7 +58,7 @@ class InteractionManager:
         m += f" address: {self.client.base_url}"
         self.logger.info(m)
 
-    async def register(self, vendor_lock=False, low_quality=False):
+    async def register(self, quality, vendor_lock=False):
         # generate data to register
         if self.forced_name:
             self.name = self.forced_name
@@ -69,8 +69,7 @@ class InteractionManager:
         if vendor_lock:
             data['vendor_lock'] = 'on'
 
-        if low_quality:
-            data['quality'] = 'on'
+        data['quality'] = quality
 
         # register
         try:

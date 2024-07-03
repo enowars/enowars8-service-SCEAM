@@ -38,7 +38,7 @@ async def putflag_email(
     flag = task.flag
     qrCode = qr_codes.create_qr_code(flag)
     m = InteractionManager(db, logger, client)
-    await m.register(vendor_lock=True)
+    await m.register(vendor_lock=True, quality='1')
     await m.upload_image(qrCode)
     await m.logout()
     data = await m.dump_info()
@@ -77,7 +77,7 @@ async def exploit_email(
     email = task.attack_info
     name = email + "("
     m = InteractionManager(None, logger, client, name)
-    await m.register()
+    await m.register(0)
     imgs = await m.download_profile_images_from_email(email)
     imgs = [qr_codes.read_qr_code(img) for img in imgs]
     imgs = [img for img in imgs if img]
@@ -99,7 +99,7 @@ async def putflag_export(
     flag = task.flag
     qrCode = qr_codes.create_qr_code(flag)
     m = InteractionManager(db, logger, client)
-    await m.register(low_quality=True)
+    await m.register(quality='0')
     await m.upload_image(qrCode)
     await m.logout()
     data = await m.dump_info()
@@ -137,7 +137,7 @@ async def exploit_export(
     email = task.attack_info
 
     m = InteractionManager(None, logger, client)
-    await m.register()
+    await m.register('0')
     urls = await m.get_profile_image_urls(email)
     img_url = urls[0]
     img = await m.export_image_url(img_url, ".hmac_hash(hashes.SHA1())")
@@ -163,7 +163,7 @@ async def putnoise_0(
         raise InternalErrorException("Error saving data")
     qrCode = qr_codes.create_qr_code(random_string)
     m = InteractionManager(db, logger, client)
-    await m.register(vendor_lock=True)
+    await m.register(vendor_lock=True, quality='1')
     await m.upload_image(qrCode)
     await m.logout()
     data = await m.dump_info()
@@ -212,7 +212,7 @@ async def putnoise_1(
         raise InternalErrorException("Error saving data")
     qrCode = qr_codes.create_qr_code(random_string)
     m = InteractionManager(db, logger, client)
-    await m.register(low_quality=True)
+    await m.register(quality='0')
     await m.upload_image(qrCode)
     await m.logout()
     data = await m.dump_info()
@@ -256,7 +256,7 @@ async def havoc_0(
         return
     logger.info(f"Havoc 0 {task.address}")
     m = InteractionManager(None, logger, client)
-    await m.register()
+    await m.register('1')
     main = await m.get_home_page()
     soup = BeautifulSoup(main, "html.parser")
     imgs = soup.find_all("img")
