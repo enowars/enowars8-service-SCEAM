@@ -9,6 +9,38 @@ from httpx import AsyncClient, ConnectTimeout, NetworkError, PoolTimeout, Respon
 
 
 success_login = "Logged in successfully!"
+nft_titles = [
+    "You Won't Believe How Much This NFT Just Sold For!",
+    "Discover the Hidden Secrets of NFT Millionaires",
+    "This Simple NFT Trick Could Make You Rich Overnight!",
+    "How One Artist Turned $100 into $1,000,000 with NFTs",
+    "The Ultimate Guide to Making a Fortune with NFTs",
+    "Top 10 NFTs You Need to Invest In Right Now!",
+    "Are NFTs the Future of Art? Find Out Now!",
+    "The NFT Boom: How to Get in Early and Profit Big",
+    "Meet the Teen Who Made Millions Selling NFTs",
+    "NFTs Explained: Everything You Need to Know to Get Started",
+    "This NFT Is Breaking Records – Find Out Why!",
+    "Why Everyone Is Talking About This New NFT Trend",
+    "Insider Tips to Scoring the Best NFTs Before They Skyrocket",
+    "From Zero to Hero: The Incredible Rise of NFTs",
+    "How to Create and Sell Your Own NFTs for Big Bucks",
+    "This One NFT Could Change Your Life Forever!",
+    "NFTs: The New Gold Rush? See How You Can Benefit",
+    "Shocking NFT Facts You Never Knew",
+    "Why You Should Invest in NFTs Right Now",
+    "Top Celebrities Making Millions from NFTs",
+    "The Dark Side of NFTs: What You Need to Know",
+    "Revealed: The Most Expensive NFTs Ever Sold",
+    "How NFTs Are Revolutionizing the Digital World",
+    "The Future of NFTs: What's Next?",
+    "The NFT Revolution: How It's Changing the Art Market",
+    "Why This NFT Craze Is Here to Stay",
+    "NFT Investing 101: How to Get Started",
+    "Discover the Most Lucrative NFT Collections Today",
+    "The Untold Story of NFT Successes",
+    "Is This the Best Time to Buy NFTs? Find Out Now!"
+]
 
 
 def generate_random_string(length):
@@ -98,10 +130,12 @@ class InteractionManager:
             self.better_RequestError("Error logging in, wrong credentials")
         self.better_logger_info("Logged in")
 
-    async def upload_image(self, image: bytes):
+    async def upload_image(self, image: bytes, profile=False):
         files = {'file': image}
+        data = {'is_profile': 'on'} if profile else {}
+        data['description'] = random.choice(nft_titles)
         try:
-            await self.client.post('/profile_' + self.email, files=files)
+            await self.client.post('/profile_' + self.email, files=files, data=data)
         except Exception as e:
             self.better_RequestError("Error uploading image", e)
         self.better_logger_info("Uploaded image")
@@ -138,6 +172,21 @@ class InteractionManager:
 
         self.better_logger_info(f"Found images: {imgs}")
         return imgs
+
+    async def download_profile_image(self, email, key=False):
+        r = None
+        files = {'file': self.key} if key else {}
+        try:
+            r = await self.client.post('/pimage_' + email, files=files, follow_redirects=True)
+            self.logger.warning(f"response.code: {r.status_code}")
+            self.logger.warning(f"response.content: {r.content}")
+            print(r.content)
+        except Exception as e:
+            self.better_RequestError("Error downloading profile image", e)
+        return Image.open(io.BytesIO(r.content))
+
+    async def download_profile_image_self(self):
+        return await self.download_profile_image(self.email, key=True)
 
     async def export_image_url(self, url, algorithm=None):
         if algorithm is None:

@@ -91,7 +91,6 @@ def read_qr_code(image) -> str:
     if not qr_data:
         image = np.array(image)
         qr_data = qrReader.detect_and_decode(image)
-        print("pyzbar failed")
         if not qr_data:
             return None
         return qr_data[0]

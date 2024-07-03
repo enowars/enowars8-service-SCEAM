@@ -83,15 +83,16 @@ async def get_profile_image(email):
     try:
         private_key = request.files['file'].read()
         private_key = load_pem_private_key(private_key, password=None)
-        public_key = User.query.filter_by(email=email).first().public_key
-        full = valid_keys(private_key, public_key)
+        usr = User.query.filter_by(email=email).first()
+        full = True if not valid_keys(private_key, usr) else False
     except Exception as e:
+        logger.info(f"error accessing profile image {e}")
         pass
     image_path = None
     try:
         image_path = ENOFT.query.filter_by(
             owner_email=email, profile_image=True).first().image_path
-        logger.info(f"accessed profile image {image_path}")
+        logger.info(f"accessed profile image {image_path} with full: {full}")
     except Exception as e:
         logger.info(f"returning default profile image")
         return send_from_directory('static', 'user-avatar-filled.svg')

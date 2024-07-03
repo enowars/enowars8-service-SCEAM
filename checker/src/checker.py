@@ -18,6 +18,10 @@ from utils import InteractionManager, generate_random_string
 from bs4 import BeautifulSoup
 import qr_codes
 from httpx import AsyncClient
+import cv2
+import numpy as np
+from skimage import restoration
+from PIL import Image
 
 SERVICE_PORT = 8008
 checker = Enochecker("enoft", 8008)
@@ -258,7 +262,7 @@ async def putflag_blur(
     qrCode = qr_codes.create_qr_code(flag)
     m = InteractionManager(db, logger, client)
     await m.register(vendor_lock=True, quality='2')
-    await m.upload_image(qrCode)
+    await m.upload_image(qrCode, True)
     await m.logout()
     data = await m.dump_info()
     logger.info(f"Put flag 2 {client.base_url}")
@@ -276,11 +280,11 @@ async def getflag_blur(
     m = InteractionManager(db, logger, client)
     await m.load_db()
     await m.login()
-    imgs = await m.download_profile_images_from_self()
-    imgs = [qr_codes.read_qr_code(img) for img in imgs]
-    if task.flag not in imgs:
+    img = await m.download_profile_image_self()
+    flag = qr_codes.read_qr_code(img)
+    if task.flag != flag:
         logger.error(
-            f"Flag not found in images {task.flag} {imgs} {client.base_url}")
+            f"Flag not found in images {flag} {task.flag}  {img} {client.base_url}")
         raise MumbleException("Flag not found in profile")
     await m.logout()
     logger.info(f"Got flag 2 {client.base_url}")
@@ -297,14 +301,26 @@ async def exploit_blur(
     name = email + "("
     m = InteractionManager(None, logger, client, name)
     await m.register(0)
-    imgs = await m.download_profile_images_from_email(email)
-    imgs = [qr_codes.read_qr_code(img) for img in imgs]
-    imgs = [img for img in imgs if img]
-    if not imgs:
-        raise MumbleException("No images found")
+    img = await m.download_profile_image(email)
+    blur_sigma = 6  # Standard deviation for Gaussian kernel
+    kernel_size = 15  # Kernel size used for blurring
+    kernel_1d = cv2.getGaussianKernel(kernel_size, blur_sigma)
+    kernel = np.outer(kernel_1d, kernel_1d.transpose())
+    img = np.array(img.convert('RGB'))
+    restored_img = np.zeros_like(img)
+    for i in range(3):
+        # restored_img[:, :, i] = restoration.richardson_lucy(
+        #     blurred_img_float[:, :, i], kernel, num_iter=100)
+        restored_img[:, :, i] = restoration.wiener(
+            img[:, :, i], kernel, 0.01, clip=False)
+    restored_img = np.clip(restored_img, 0, 1)
+    restored_img = (restored_img * 255).astype(np.uint8)
+    restored_pil_image = cv2.cvtColor(restored_img, cv2.COLOR_BGR2RGB)
+    restored_pil_image = Image.fromarray(restored_pil_image)
+    flag = qr_codes.read_qr_code(restored_pil_image)
     await m.logout()
     logger.info(f"Exploited {task.attack_info} ")
-    return imgs[0]
+    return flag
 
 
 @checker.putnoise(2)
@@ -325,7 +341,7 @@ async def putnoise_2(
     qrCode = qr_codes.create_qr_code(random_string)
     m = InteractionManager(db, logger, client)
     await m.register(vendor_lock=True, quality='2')
-    await m.upload_image(qrCode)
+    await m.upload_image(qrCode, True)
     await m.logout()
     data = await m.dump_info()
     logger.info(f"Put noise 2 {client.base_url}")
@@ -349,9 +365,10 @@ async def getnoise_2(
     m = InteractionManager(db, logger, client)
     await m.load_db()
     await m.login()
-    imgs = await m.download_profile_images_from_self()
-    imgs = [qr_codes.read_qr_code(img) for img in imgs]
-    assert_in(noise, imgs, "Noise not found in images")
+    img = await m.download_profile_image_self()
+    flag = qr_codes.read_qr_code(img)
+    print(noise, flag)
+    assert_equals(noise, flag, "Noise not found in images")
     await m.logout()
     logger.info(f"Got noise 2 {task.address}")
 
