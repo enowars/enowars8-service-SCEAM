@@ -290,6 +290,20 @@ async def getflag_blur(
     logger.info(f"Got flag 2 {client.base_url}")
 
 
+def unblur(image, iterations=30):
+    blur_sigma = 6
+    kernel_size = 15  # Kernel size used for blurring
+    kernel_1d = cv2.getGaussianKernel(kernel_size, blur_sigma)
+    kernel = np.outer(kernel_1d, kernel_1d.transpose())
+    restored_img = np.zeros_like(image, dtype=np.float32)
+    for i in range(3):
+        restored_img[:, :, i] = restoration.richardson_lucy(
+            image[:, :, i], kernel, iterations)
+    restored_img = np.clip(restored_img, 0, 1)
+    restored_img = (restored_img * 255).astype(np.uint8)
+    return restored_img
+
+
 @checker.exploit(2)
 async def exploit_blur(
     task: ExploitCheckerTaskMessage,
@@ -302,20 +316,9 @@ async def exploit_blur(
     m = InteractionManager(None, logger, client, name)
     await m.register(0)
     img = await m.download_profile_image(email)
-    blur_sigma = 6  # Standard deviation for Gaussian kernel
-    kernel_size = 15  # Kernel size used for blurring
-    kernel_1d = cv2.getGaussianKernel(kernel_size, blur_sigma)
-    kernel = np.outer(kernel_1d, kernel_1d.transpose())
-    img = np.array(img.convert('RGB'))
-    restored_img = np.zeros_like(img)
-    for i in range(3):
-        # restored_img[:, :, i] = restoration.richardson_lucy(
-        #     blurred_img_float[:, :, i], kernel, num_iter=100)
-        restored_img[:, :, i] = restoration.wiener(
-            img[:, :, i], kernel, 0.01, clip=False)
-    restored_img = np.clip(restored_img, 0, 1)
-    restored_img = (restored_img * 255).astype(np.uint8)
-    restored_pil_image = cv2.cvtColor(restored_img, cv2.COLOR_BGR2RGB)
+    cv2_img = cv2.imdecode(np.frombuffer(img, np.uint8), cv2.IMREAD_COLOR)
+    restored_cv2_image = unblur(cv2_img)
+    restored_pil_image = cv2.cvtColor(restored_cv2_image, cv2.COLOR_BGR2RGB)
     restored_pil_image = Image.fromarray(restored_pil_image)
     flag = qr_codes.read_qr_code(restored_pil_image)
     await m.logout()
