@@ -6,6 +6,8 @@ import io
 from logging import LoggerAdapter
 from enochecker3 import MumbleException, OfflineException, ChainDB, InternalErrorException
 from httpx import AsyncClient, ConnectTimeout, NetworkError, PoolTimeout, Response
+import numpy as np
+import cv2
 
 
 success_login = "Logged in successfully!"
@@ -174,16 +176,17 @@ class InteractionManager:
         return imgs
 
     async def download_profile_image(self, email, key=False):
-        r = None
+        pil_img = None
+        cv2_img = None
         files = {'file': self.key} if key else {}
         try:
             r = await self.client.post('/pimage_' + email, files=files, follow_redirects=True)
-            self.logger.warning(f"response.code: {r.status_code}")
-            self.logger.warning(f"response.content: {r.content}")
-            print(r.content)
+            cv2_img = cv2.imdecode(np.frombuffer(
+                r.content, np.uint8), cv2.IMREAD_COLOR)
+            pil_img = Image.open(io.BytesIO(r.content))
         except Exception as e:
             self.better_RequestError("Error downloading profile image", e)
-        return Image.open(io.BytesIO(r.content))
+        return pil_img, cv2_img
 
     async def download_profile_image_self(self):
         return await self.download_profile_image(self.email, key=True)

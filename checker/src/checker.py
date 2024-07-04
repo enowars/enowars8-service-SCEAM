@@ -280,25 +280,25 @@ async def getflag_blur(
     m = InteractionManager(db, logger, client)
     await m.load_db()
     await m.login()
-    img = await m.download_profile_image_self()
+    img, _ = await m.download_profile_image_self()
     flag = qr_codes.read_qr_code(img)
     if task.flag != flag:
         logger.error(
-            f"Flag not found in images {flag} {task.flag}  {img} {client.base_url}")
+            f"Flag not found in images {flag} {task.flag} {client.base_url}")
         raise MumbleException("Flag not found in profile")
     await m.logout()
     logger.info(f"Got flag 2 {client.base_url}")
 
 
-def unblur(image, iterations=30):
-    blur_sigma = 6
+def unblur(image):
+    blur_sigma = 6  # Standard deviation for Gaussian kernel
     kernel_size = 15  # Kernel size used for blurring
     kernel_1d = cv2.getGaussianKernel(kernel_size, blur_sigma)
     kernel = np.outer(kernel_1d, kernel_1d.transpose())
     restored_img = np.zeros_like(image, dtype=np.float32)
     for i in range(3):
-        restored_img[:, :, i] = restoration.richardson_lucy(
-            image[:, :, i], kernel, iterations)
+        restored_img[:, :, i] = restoration.wiener(
+            image[:, :, i], kernel, 0.01, clip=False)
     restored_img = np.clip(restored_img, 0, 1)
     restored_img = (restored_img * 255).astype(np.uint8)
     return restored_img
@@ -314,15 +314,13 @@ async def exploit_blur(
     email = task.attack_info
     name = email + "("
     m = InteractionManager(None, logger, client, name)
-    await m.register(0)
-    img = await m.download_profile_image(email)
-    cv2_img = cv2.imdecode(np.frombuffer(img, np.uint8), cv2.IMREAD_COLOR)
+    pil_img, cv2_img = await m.download_profile_image(email)
+    cv2_img = cv2_img.astype(np.float32) / 255.0
     restored_cv2_image = unblur(cv2_img)
     restored_pil_image = cv2.cvtColor(restored_cv2_image, cv2.COLOR_BGR2RGB)
     restored_pil_image = Image.fromarray(restored_pil_image)
     flag = qr_codes.read_qr_code(restored_pil_image)
-    await m.logout()
-    logger.info(f"Exploited {task.attack_info} ")
+    logger.info(f"Exploited blur {task.attack_info} with flag {flag}")
     return flag
 
 
@@ -368,9 +366,8 @@ async def getnoise_2(
     m = InteractionManager(db, logger, client)
     await m.load_db()
     await m.login()
-    img = await m.download_profile_image_self()
+    img, _ = await m.download_profile_image_self()
     flag = qr_codes.read_qr_code(img)
-    print(noise, flag)
     assert_equals(noise, flag, "Noise not found in images")
     await m.logout()
     logger.info(f"Got noise 2 {task.address}")

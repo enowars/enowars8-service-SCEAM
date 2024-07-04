@@ -95,7 +95,7 @@ async def get_profile_image(email):
         logger.info(f"accessed profile image {image_path} with full: {full}")
     except Exception as e:
         logger.info(f"returning default profile image")
-        return send_from_directory('static', 'user-avatar-filled.svg')
+        return send_from_directory('static', 'user-avatar-filled.png')
     if full:
         logger.info(f"returning full profile image")
         return send_from_directory(current_app.config['FULL_IMAGE_UPLOADS'], image_path)
