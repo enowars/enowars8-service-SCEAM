@@ -163,3 +163,4 @@ cython_debug/
 
 checker/data
 checker/src/backgrounds
+documentation/scripts/scoreboard/data
