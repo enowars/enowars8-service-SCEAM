@@ -76,13 +76,13 @@ def create_qr_code(flag, scale=SCALE, border=BORDER) -> bytes:
     output.write(encoded_image.tobytes())
     output.seek(0)
     res = output.getvalue()
-    generated_img = Image.open(io.BytesIO(res))
-    decoded = read_qr_code(generated_img)
-    if decoded != flag:
-        output = io.BytesIO()
-        qr.save(output, kind='png', scale=3, border=border)
-        output.seek(0)
-        res = output.getvalue()
+    # generated_img = Image.open(io.BytesIO(res))
+    # decoded = read_qr_code(generated_img)
+    # if decoded != flag:
+    #     output = io.BytesIO()
+    #     qr.save(output, kind='png', scale=3, border=border)
+    #     output.seek(0)
+    #     res = output.getvalue()
     return res
 
 
