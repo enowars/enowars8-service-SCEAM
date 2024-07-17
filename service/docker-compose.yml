@@ -7,3 +7,4 @@ services:
       - ./instance/uploads:/src/uploads
     ports:
       - "8008:8008"
+    restart: unless-stopped
