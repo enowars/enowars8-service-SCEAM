@@ -13,6 +13,17 @@
     let initialized = false;
     let summaryTable; // Variable to hold the summary table
 
+    function hslToHex(h, s, l) {
+        l /= 100;
+        const a = s * Math.min(l, 1 - l) / 100;
+        const f = n => {
+            const k = (n + h / 30) % 12;
+            const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+            return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
+        };
+        return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
     // Function to summarize the service statuses per column and create the summary table
     function createSummaryTable() {
         // Select the table
@@ -28,6 +39,14 @@
         // Select all rows except the header
         let rows = table.querySelectorAll('tr.otherrow');
         rows = Array.from(rows).map(x => x.querySelectorAll('td'));
+        let original_rows = Array.from(rows);
+        console.log(original_rows);
+        original_rows = original_rows.map(x => Array.from(x).slice(3, x.length));
+        // map to second element in the 'service-stats' div
+        original_rows = original_rows.map(x => x.map(y => Array.from(y.querySelectorAll('div.service-stats')).map(z => z.children[1].innerText)));
+        // map text to boolean if > 0
+        original_rows = original_rows.map(x => x.map(y => y.map(z => parseInt(z) > 0)));
+        console.log(original_rows);
         rows = rows.map(x => Array.from(x).map(y => y.className));
         rows = rows.map(x => x.slice(3, x.length));
 
@@ -40,7 +59,8 @@
                 MUMBLE: 0,
                 INTERNAL_ERROR: 0,
                 OFFLINE: 0,
-                RECOVERING: 0
+                RECOVERING: 0,
+                exploiting: 0
             };
 
             for (let j = 0; j < rows.length; j++) {
@@ -55,6 +75,14 @@
                 } else if (rows[j][i].includes("service-RECOVERING")) {
                     serviceCounts[names[i]].RECOVERING++;
                 }
+
+
+                // original_rows[j][i].includes(true);
+                serviceCounts[names[i]].exploiting += original_rows[j][i].includes(true);
+
+
+
+
             }
         }
 
@@ -70,7 +98,7 @@
         const headerRow = document.createElement('tr');
         headerRow.style.backgroundColor = '#f2f2f2';
         headerRow.style.color = '#333';
-        const headers = ['Service', 'OK', 'RECOVERING', 'MUMBLE', 'OFFLINE', 'INTERNAL ERROR'];
+        const headers = ['Service', 'OK', 'RECOVERING', 'MUMBLE', 'OFFLINE', 'INTERNAL ERROR', 'exploiting'];
         headers.forEach(headerText => {
             const headerCell = document.createElement('th');
             headerCell.textContent = headerText;
@@ -94,28 +122,39 @@
             row.appendChild(serviceNameCell);
 
             // Status cells
-            const statusTypes = ['OK', 'RECOVERING', 'MUMBLE', 'OFFLINE', 'INTERNAL_ERROR',];
+            const statusTypes = ['OK', 'RECOVERING', 'MUMBLE', 'OFFLINE', 'INTERNAL_ERROR', 'exploiting'];
             statusTypes.forEach(status => {
                 const statusCell = document.createElement('td');
                 statusCell.textContent = statusCounts[status];
                 statusCell.style.padding = '10px';
                 statusCell.style.textAlign = 'center';
                 statusCell.style.border = '1px solid #ddd';
+                let proportion = statusCounts[status] / rows.length * 100;
+                let brightness = 100 - (proportion / 2 + 10);
+                let saturation = proportion * 0.5 + 50;
                 switch (status) {
                     case 'OK':
-                        statusCell.style.backgroundColor = '#d4edda';
+                        // statusCell.style.backgroundColor = '#d4edda';
+                        statusCell.style.backgroundColor = hslToHex(110, saturation, brightness);
                         break;
                     case 'MUMBLE':
-                        statusCell.style.backgroundColor = '#fff3cd';
+                        // statusCell.style.backgroundColor = '#fff3cd';
+                        statusCell.style.backgroundColor = hslToHex(40, saturation, brightness);
                         break;
                     case 'INTERNAL_ERROR':
-                        statusCell.style.backgroundColor = '#d6d8db';
+                        // statusCell.style.backgroundColor = '#d6d8db';
+                        statusCell.style.backgroundColor = hslToHex(240, saturation, brightness);
                         break;
                     case 'OFFLINE':
-                        statusCell.style.backgroundColor = '#f8d7da';
+                        // statusCell.style.backgroundColor = '#f8d7da';
+                        statusCell.style.backgroundColor = hslToHex(0, saturation, brightness);
                         break;
                     case 'RECOVERING':
-                        statusCell.style.backgroundColor = '#8ec6fa';
+                        // statusCell.style.backgroundColor = '#8ec6fa';
+                        statusCell.style.backgroundColor = hslToHex(210, saturation, brightness);
+                        break;
+                    case 'exploiting':
+                        statusCell.style.backgroundColor = hslToHex(300, saturation, brightness);
                         break;
                     default:
                         break;
