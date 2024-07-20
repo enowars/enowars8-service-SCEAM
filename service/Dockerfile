@@ -1,7 +1,8 @@
 # Use a suitable base-image.
 FROM python:3.12.2-slim
 RUN apt-get update && apt-get upgrade -y 
-RUN apt-get install libgl1-mesa-glx -y
+RUN apt-get install libgl1 -y
+RUN apt-get install libglx-mesa0 -y
 RUN apt-get install libglib2.0-0 libsm6 libxext6 libxrender-dev -y
 
 # Copy our service
