@@ -1,8 +1,7 @@
 FROM python:3.9-buster
 RUN apt-get update && apt-get upgrade -y 
 RUN apt-get install libzbar0 -y
-RUN apt-get install libgl1 -y
-RUN apt-get install libglx-mesa0 -y
+RUN apt-get install libgl1-mesa-glx -y
 
 # add checker user
 RUN useradd -ms /bin/bash -u 1000 checker
