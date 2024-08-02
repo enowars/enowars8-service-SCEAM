@@ -1,14 +1,5 @@
-# TODO
+# Sceam
 
-test pasting only qr code (small into the middle)
-test manual pasting of qr code
-cleanup should cleanup logging???
-time test server registration and image blurring
+Sceam is a Steam clone turned into a social media platform for ENOFT's (NFT's). It is a full stack application that uses Flask. The application allows users to create an account and manage ENOFT's by posting and exporting them.
 
-questions:
-move blurring to viewing?
-resources?
-
-##
-
-https://www.kaggle.com/datasets/tongpython/cat-and-dog?resource=download-directory
+It was created and later played for the ENOWARS 8 CTF competition.
