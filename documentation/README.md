@@ -52,7 +52,7 @@ docker compose up --build -d
 
 ## Usage
 
-The service is reachable on port 8008.
+The service is reachable on port 8008. The checker is reachable on port 18008.
 
 ### Viewing ENOFT's
 
