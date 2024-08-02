@@ -117,7 +117,7 @@ Here you have to provide your private key and select the encryption algorithm as
 
 ## Exploits and Fixes
 
-This service contains 3 Flagstores. All flagstores are saved as qr codes in images. Retrieval is controlled by the account settings, which prevent flag leakage.
+This service contains 3 Flagstores. All three flagstores deposit flags as qr codes in images. Retrieval is controlled by the account settings, which prevent flag leakage.
 
 ### Ownership Faking
 
