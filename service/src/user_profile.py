@@ -146,7 +146,7 @@ async def export(path):
 
         logger.info(
             f"User {session['name']} exported image {path} with {res['data']}")
-        session['img_path'] = path
+        session['img_path'] = request.form['img']
         return render_template(
             "show_serialization.html",
             user=current_user,
