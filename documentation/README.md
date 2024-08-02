@@ -8,7 +8,7 @@
   - [Logging In](#logging-in)
   - [Creating an ENOFT](#creating-an-enoft)
   - [Exporting ENOFT's](#exporting-enofts)
-- [Exploits and Fixes](#exploits)
+- [Exploits and Fixes](#exploits-and-fixes)
   - [Ownership Faking](#ownership-faking)
   - [Export verification Bypass](#export-verification-bypass)
   - [Reversible Blur](#reversible-blur)
